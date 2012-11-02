@@ -15,7 +15,7 @@ require 'rubygems/package_task'
 require 'rspec/core/rake_task'
 
 desc 'Package gem'
-gemtask = Gem::PackageTask.new(Gem::Specification.load('rs_demo_users.gemspec')) do |package|
+gemtask = Gem::PackageTask.new(Gem::Specification.load('rs_user_policy.gemspec')) do |package|
   package.package_dir = 'pkg'
   package.need_zip = true
   package.need_tar = true

@@ -1,0 +1,188 @@
+#!/usr/bin/env ruby
+
+# Copyright (c) 2012 Ryan J. Geyer
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+require 'trollop'
+require 'right_api_client'
+require 'logger'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'audit_log'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'utilities'))
+
+opts = Trollop::options do
+  banner = "Manages users across many different child accounts of a RightScale Enterprise Master Account"
+
+  opt :rs_email, "You RightScale User Email Address", :type => :string, :required => true
+  opt :rs_pass, "Your RightScale User Password", :type => :string, :required => true
+  opt :rs_acct_num, "A RightScale Enterprise Master Account ID", :type => :string, :required => true
+  opt :policy, "The path to a JSON file containing the role to permissions policy to enforce", :type => :string, :required => true
+  opt :user_assignments, "The path to a JSON file containing email address => role pairs for user assignments", :type => :string
+  opt :dry_run, "A flag indicating that no changes should be made, only the user_assignments.json should be evaluated (or created) and the audit_log.json produced"
+end
+
+log = Logger.new(STDOUT)
+timestamp = Time::now.to_i
+deleted_users = []
+accounts = []
+user_href_resource_map = {}
+user_email_resource_map = {}
+permission_delete_order = [
+  'enterprise_admin',
+  'admin',
+  'security_manager',
+  'actor',
+  'billing',
+  'server_login',
+  'publisher',
+  'designer',
+  'library',
+  'lite_user',
+  'observer'
+]
+
+user_assignments_output = "user_assignments-#{timestamp}.json"
+
+audit_log = AuditLog.new opts.merge(:timestamp => timestamp)
+
+client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => opts[:rs_acct_num])
+master_account = client.accounts(:id => opts[:rs_acct_num]).show()
+client.users().index.each do |user|
+  user_href_resource_map[user.href] = user
+  user_email_resource_map[user.email] = user
+end
+
+accounts << {:client => client, :href => master_account.href, :name => master_account.name}
+
+log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken") if opts[:dry_run]
+
+log.info("Operating on the Enterprise Master Account #{master_account.name}")
+
+if File.exists? opts[:policy]
+  # TODO: Validate policy file format
+  policy = JSON.parse(File.read(opts[:policy]))
+else
+  log.fatal("The policy file named #{opts[:policy]} was not found!")
+  exit 1
+end
+
+user_assignments = {}
+if opts[:user_assignments]
+  if File.exists? opts[:user_assignments]
+    user_assignments = JSON.parse(File.read(opts[:user_assignments]))
+  else
+    log.warn("The user_assigments file named #{opts[:user_assignments]} was not found.  All users will be treated as immutable and written to the user_assigments output file.")
+  end
+else
+  log.warn("No user_assignments file was specified.  All users will be treated as immutable and written to the user_assigments output file.")
+end
+
+begin
+  client.child_accounts().index.each do |child|
+    child_client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => Utilities.id_from_href(child.href))
+    accounts << {:client => child_client, :href => child.href, :name => child.name}
+
+    child_client.users().index.each do |user|
+      user_href_resource_map[user.href] = user
+      user_email_resource_map[user.email] = user
+    end
+  end
+rescue RightApi::Exceptions::ApiException => e
+  if e.message =~ /Permission denied/
+    log.warn("#{master_account.name} is not an Enterprise Master, or you do not have the enterprise_manager permission.  No child accounts will be operated on.")
+  else
+    raise e
+  end
+end
+
+accounts.each do |account|
+  child_client = account[:client]
+  users = {}
+  user_email_resource_map.each do |email,user|
+    users[email] = {}
+  end
+
+  log.info("#{account[:name]} - #{account[:href]}")
+
+  permissions = child_client.permissions().index
+  log.info("There are #{permissions.length} unique permissions")
+  permissions.each do |permission|
+    user_email = user_href_resource_map[permission.user.href].email || permission.user.href
+    users[user_email] = {} unless users.key?(user_email)
+    users[user_email][permission.role_title] = permission.href
+  end
+  log.info("There are #{users.length} unique Users")
+
+  users.each do |email,user|
+    unless user_assignments.key?(email)
+      user_assignments[email] = 'immutable'
+    end
+    # Allow some different options about possibly prompting the user etc
+    # TODO: Put this in a begin/rescue/end that allows stuff to continue and create an audit_log in the event of an error
+    case user_assignments[email]
+      when 'immutable'
+        # By design, do nothing
+      when 'delete'
+        # Note: This is an explicit delete across all master and child accounts
+        # a user can also be effectively deleted if they have an empty list of
+        # permissions for a particular account
+        unless opts[:dry_run]
+          log.debug("Gonna delete #{JSON.pretty_generate(user)}")
+
+          Utilities.yield_on_keys_in_order(permission_delete_order, user) do |role_title,perm_href|
+            log.debug("I KEELZ U PERMISSION! #{email} - #{role_title}")
+            child_client.permissions(:id => Utilities.id_from_href(perm_href)).destroy()
+            deleted_users << email
+          end
+        end
+        audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
+      else
+        user_policy = []
+        user_policy = policy[user_assignments[email]][account[:href]] if policy[user_assignments[email]].key?(account[:href])
+        user_policy = policy[user_assignments[email]]['default'] if policy[user_assignments[email]].key?('default')
+        removed = user.keys - user_policy
+        added = user_policy - user.keys
+        changes = "-#{removed} +#{added}"
+        unless opts[:dry_run]
+          # Convert the role_title array into a hash with the hrefs
+          remove_hash = Hash[removed.map {|role| [role, user[role]]}]
+
+          Utilities.yield_on_keys_in_order(permission_delete_order, remove_hash) do |role_title, href|
+            child_client.permissions(:id => Utilities.id_from_href(href)).destroy()
+          end
+
+          if added.length > 0
+            add_hash = Hash[added.map {|x| [x, nil]}]
+            Utilities.yield_on_keys_in_order(['observer'], add_hash) do |role_title,foo|
+              child_client.permissions.create({'permission[user_href]' => user_email_resource_map[email].href, 'permission[role_title]' => role_title})
+            end
+          end
+        end
+        audit_log.add_entry(email, account[:name], 'update_permissions', changes) unless removed.length + added.length == 0
+    end
+  end
+end
+
+deleted_users.each do |email|
+  user_assignments.delete(email)
+end
+
+File.open(user_assignments_output, 'w') {|f| f.write(JSON.pretty_generate(user_assignments))}
+audit_log.write_file

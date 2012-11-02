@@ -1,0 +1,70 @@
+= rs_user_policy
+
+A useful tool for managing many users across many child accounts in a RightScale Enterprise Edition
+
+== Usage
+
+The binary contained in this gem accepts two files as inputs to determine it's behavior.  The first, is a policy JSON file which specifies the permissions to be applied to users.
+
+Policy JSON should be in the following format
+
+  {
+    "role_name": {
+      "default": [<permissions_here>],
+      "/api/accounts/12345": [<permissions_here>]
+    }
+  }
+
+Here the "role_name" is what can be assigned to a user.  The keys of the hash ("default" and "/api/accounts/12345") refer to the account(s) the role should have access to, and the value for those keys is an array of permissions that should be assigned for that role in that account.
+
+The "default" account will apply to all accounts encountered.
+
+The second input file is the user assignments JSON file which assigns users to roles using their email.
+
+User Assignment JSON should be in the following format
+
+  {
+    "ryan.geyer@rightscale.com": "role_name"
+  }
+
+There are two default roles which do not need to be defined in the policy file.  "immutable" which indicates that no changes should be performed on the user, and "delete" which indicates that all permissions should be removed for the user in all accounts.
+
+Many email:role pairs can be specified. in the user assignments JSON
+
+So, given a policy file like;
+
+  {
+    "team1": {
+      "default": ['observer', 'actor'],
+      "/api/accounts/12345": ['observer', 'actor', 'server_login', 'admin']
+    },
+    "team2": {
+      "default": ['observer', 'lite_user'],
+      "/api/accounts/23456": ['observer', 'actor']
+    }
+  }
+
+And a user assignments file like;
+
+  {
+    "user1@email.com": "team1",
+    "user2@email.com": "team2"
+  }
+
+And operating on the accounts 12345 and 23456;
+user1 will be assigned observer and actor rights on account 23456, and observer, actor, server_login, and admin rights on account 12345
+user2 will be assigned observer and lite_user rights on account 12345, and observer and actor rights on account 23456
+
+Got that?  Cool!
+
+== Output
+
+When the script is run, it will produce two JSON files as output.
+
+First is the audit_log-<timestamp>.json file.  This will contain a history of all actions taken on all users.  If --dry-run is specified, it will show the changes which *would* have been performed.
+
+Second is the user_assignments-<timestamp>.json file.  This will be a combination of the users read in from JSON in file specified by the --user-assignments option, plus any new users discovered in the accounts operated on.  New users will be assigned the "immutable" role.  This allows you to run rs_user_policy with the --dry-run option, or with no user assignments input to discover users, then assign roles to those users in the produced JSON, then use that file as the --user-assignments input for a subsequent run.
+
+== Copyright
+
+Copyright (c) 2012 Ryan J. Geyer. See LICENSE.txt for further details.

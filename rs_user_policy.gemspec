@@ -1,7 +1,7 @@
 Gem::Specification.new do |gem|
   gem.name = "rs_user_policy"
   gem.version = "0.0.1"
-  gem.homepage = "http://www.rightscale.com"
+  gem.homepage = "https://github.com/rgeyer/rs_user_policy"
   gem.license = "MIT"
   gem.summary = %Q{Manages users across many different child accounts of a RightScale Enterprise Master Account}
   gem.description = gem.summary

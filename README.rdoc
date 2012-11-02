@@ -65,6 +65,10 @@ First is the audit_log-<timestamp>.json file.  This will contain a history of al
 
 Second is the user_assignments-<timestamp>.json file.  This will be a combination of the users read in from JSON in file specified by the --user-assignments option, plus any new users discovered in the accounts operated on.  New users will be assigned the "immutable" role.  This allows you to run rs_user_policy with the --dry-run option, or with no user assignments input to discover users, then assign roles to those users in the produced JSON, then use that file as the --user-assignments input for a subsequent run.
 
+== TODO
+
+* Allow a user to belong to more than one "role"
+
 == Copyright
 
 Copyright (c) 2012 Ryan J. Geyer. See LICENSE.txt for further details.

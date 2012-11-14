@@ -75,9 +75,20 @@ log.info("The dry_run option was selected, no action will be taken, but the user
 
 log.info("Operating on the Enterprise Master Account #{master_account.name}")
 
+def valid_json_file?(json_file)
+  JSON.parse(File.read(json_file))
+  return true
+rescue JSON::ParserError
+  return false
+end
+
 if File.exists? opts[:policy]
-  # TODO: Validate policy file format
-  policy = JSON.parse(File.read(opts[:policy]))
+  if valid_json_file?
+    policy = JSON.parse(File.read(opts[:policy]))
+  else
+    log.fatal("The policy file named #{opts[:policy]} is not a properly formatted json file!")
+    exit 1
+  end
 else
   log.fatal("The policy file named #{opts[:policy]} was not found!")
   exit 1

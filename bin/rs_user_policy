@@ -58,33 +58,29 @@ permission_delete_order = [
   'observer'
 ]
 
+log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken") if opts[:dry_run]
+
 user_assignments_output = "user_assignments-#{timestamp}.json"
 
 audit_log = AuditLog.new opts.merge(:timestamp => timestamp)
 
-client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => opts[:rs_acct_num])
-master_account = client.accounts(:id => opts[:rs_acct_num]).show()
-client.users().index.each do |user|
-  user_href_resource_map[user.href] = user
-  user_email_resource_map[user.email] = user
-end
-
-accounts << {:client => client, :href => master_account.href, :name => master_account.name}
-
-log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken") if opts[:dry_run]
-
-log.info("Operating on the Enterprise Master Account #{master_account.name}")
-
-def valid_json_file?(json_file)
-  JSON.parse(File.read(json_file))
+def valid_policy_json_file?(json_file, &block)
+  # TODO: Also validate that the policy file is in the correct form.
+  # I.E. {
+  #   "policy-name": {
+  #     "account-href-or-default": ["list", "of", "permissions"]
+  #   }
+  #}
+  yield JSON.parse(File.read(json_file))
   return true
 rescue JSON::ParserError
   return false
 end
 
 if File.exists? opts[:policy]
-  if valid_json_file?
-    policy = JSON.parse(File.read(opts[:policy]))
+  if valid_policy_json_file?(opts[:policy]) do |p|
+      policy = p
+    end
   else
     log.fatal("The policy file named #{opts[:policy]} is not a properly formatted json file!")
     exit 1
@@ -104,6 +100,17 @@ if opts[:user_assignments]
 else
   log.warn("No user_assignments file was specified.  All users will be treated as immutable and written to the user_assigments output file.")
 end
+
+client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => opts[:rs_acct_num])
+master_account = client.accounts(:id => opts[:rs_acct_num]).show()
+client.users().index.each do |user|
+  user_href_resource_map[user.href] = user
+  user_email_resource_map[user.email] = user
+end
+
+accounts << {:client => client, :href => master_account.href, :name => master_account.name}
+
+log.info("Operating on the Enterprise Master Account #{master_account.name}")
 
 begin
   client.child_accounts().index.each do |child|

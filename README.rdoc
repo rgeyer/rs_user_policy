@@ -2,6 +2,9 @@
 
 A useful tool for managing many users across many child accounts in a RightScale Enterprise Edition
 
+While the tests are not exhaustive, the current build status is..
+{<img src="https://travis-ci.org/rgeyer/rs_user_policy.png" />}[https://travis-ci.org/rgeyer/rs_user_policy]
+
 == Usage
 
 The binary contained in this gem accepts two files as inputs to determine it's behavior.  The first, is a policy JSON file which specifies the permissions to be applied to users.

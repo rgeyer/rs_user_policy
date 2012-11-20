@@ -45,7 +45,7 @@ accounts = []
 user_href_resource_map = {}
 user_email_resource_map = {}
 permission_delete_order = [
-  'enterprise_admin',
+  'enterprise_manager',
   'admin',
   'security_manager',
   'actor',
@@ -63,6 +63,7 @@ log.info("The dry_run option was selected, no action will be taken, but the user
 user_assignments_output = "user_assignments-#{timestamp}.json"
 
 audit_log = AuditLog.new opts.merge(:timestamp => timestamp)
+policy = {}
 
 def valid_policy_json_file?(json_file, &block)
   # TODO: Also validate that the policy file is in the correct form.
@@ -173,9 +174,12 @@ accounts.each do |account|
         audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
       else
         user_policy = []
-        user_policy = policy[user_assignments[email]][account[:href]] if policy[user_assignments[email]].key?(account[:href])
-        user_policy = policy[user_assignments[email]]['default'] if policy[user_assignments[email]].key?('default')
-        removed = user.keys - user_policy
+        if policy[user_assignments[email]].key?(account[:href])
+          user_policy = policy[user_assignments[email]][account[:href]]
+        elsif policy[user_assignments[email]].key?('default')
+          user_policy = policy[user_assignments[email]]['default']
+        end
+        removed = (user_policy.length == 0) ? user.keys : user.keys - user_policy
         added = user_policy - user.keys
         changes = "-#{removed} +#{added}"
         unless opts[:dry_run]

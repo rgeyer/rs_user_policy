@@ -19,18 +19,16 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'helper'))
 
-require 'utilities'
-
-describe Utilities do
+describe RsUserPolicy::Utilities do
   context :id_from_href do
     it 'can get id for an account' do
-      Utilities.id_from_href('/api/accounts/12345').should == '12345'
+      RsUserPolicy::Utilities.id_from_href('/api/accounts/12345').should == '12345'
     end
 
     it 'can get id for a permission' do
-      Utilities.id_from_href('/api/permissions/12345').should == '12345'
+      RsUserPolicy::Utilities.id_from_href('/api/permissions/12345').should == '12345'
     end
   end
 
@@ -43,7 +41,7 @@ describe Utilities do
       }
       expectedCallOrder = ['observer','admin','actor']
       callOrder = []
-      Utilities.yield_on_keys_in_order(expectedCallOrder, testHash) do |role_title, href|
+      RsUserPolicy::Utilities.yield_on_keys_in_order(expectedCallOrder, testHash) do |role_title, href|
         callOrder << role_title
       end
       callOrder[0].should == 'observer'
@@ -60,7 +58,7 @@ describe Utilities do
       }
       expectedCallOrder = ['observer','admin','actor', 'billing', 'enterprise_manager']
       callOrder = []
-      Utilities.yield_on_keys_in_order(['observer', 'admin', 'actor'], testHash) do |role_title, href|
+      RsUserPolicy::Utilities.yield_on_keys_in_order(['observer', 'admin', 'actor'], testHash) do |role_title, href|
         callOrder << role_title
       end
       callOrder[0].should == 'observer'

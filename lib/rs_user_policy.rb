@@ -19,7 +19,5 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require File.expand_path(File.join(File.dirname(__FILE__), 'audit_log'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'utilities'))
-glob_path = File.expand_path(File.join(File.dirname(__FILE__), '{policy,user_assignments}')) + '/*.rb'
+glob_path = File.expand_path(File.join(File.dirname(__FILE__), 'rs_user_policy')) + '/**/*.rb'
 Dir.glob(glob_path, &method(:require))

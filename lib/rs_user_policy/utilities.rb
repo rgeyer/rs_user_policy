@@ -19,32 +19,33 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-class Utilities
+module RsUserPolicy
+  class Utilities
+    # Uses a regex to parse a RightScale API resource id from it's relative href
+    #
+    # @param [String] href The relative href of the RightScale API resource
+    # @return [String] The unique ID of the resource
+    def self.id_from_href(href)
+      matches = /.*\/([0-9]*)/.match(href)
+      matches[1] || nil
+    end
 
-  # Uses a regex to parse a RightScale API resource id from it's relative href
-  #
-  # @param [String] href The relative href of the RightScale API resource
-  # @return [String] The unique ID of the resource
-  def self.id_from_href(href)
-    matches = /.*\/([0-9]*)/.match(href)
-    matches[1] || nil
-  end
-
-  # Operates on the key/value pairs in a hash in the order specified in 'order'
-  # followed by any key/value pairs not specified in the order
-  #
-  # @param [Array] order An array containing keys in the order they should be yielded to the block
-  # @param [Hash] hash The hash to operate on in the specified order
-  # @param [Closure] block A closure to yield to
-  def self.yield_on_keys_in_order(order, hash, &block)
-    order.each do |key|
-      if hash.key?(key)
-        yield key, hash.delete(key)
+    # Operates on the key/value pairs in a hash in the order specified in 'order'
+    # followed by any key/value pairs not specified in the order
+    #
+    # @param [Array] order An array containing keys in the order they should be yielded to the block
+    # @param [Hash] hash The hash to operate on in the specified order
+    # @param [Closure] block A closure to yield to
+    def self.yield_on_keys_in_order(order, hash, &block)
+      order.each do |key|
+        if hash.key?(key)
+          yield key, hash.delete(key)
+        end
+      end
+      hash.each do |key,val|
+        yield key, val
       end
     end
-    hash.each do |key,val|
-      yield key, val
-    end
-  end
 
+  end
 end

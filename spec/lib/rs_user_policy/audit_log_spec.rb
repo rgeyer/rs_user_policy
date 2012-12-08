@@ -19,27 +19,25 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'helper'))
 
-require 'audit_log'
-
-describe AuditLog do
+describe RsUserPolicy::AuditLog do
   context :initialize do
     it 'adds dryrun to audit log name when dryrun is specified' do
-      audit_log = AuditLog.new(:dry_run => true)
+      audit_log = RsUserPolicy::AuditLog.new(:dry_run => true)
       audit_log.filename.should include '_dryrun'
     end
 
     it 'uses provided timestamp in filename' do
       ts = Time.now.to_i
-      audit_log = AuditLog.new(:timestamp => ts)
+      audit_log = RsUserPolicy::AuditLog.new(:timestamp => ts)
       audit_log.filename.should include "#{ts}"
     end
   end
 
   context :add_entry do
     it 'can initialize entries for a user' do
-      audit_log = AuditLog.new
+      audit_log = RsUserPolicy::AuditLog.new
       audit_log.audit_log.should == {}
       audit_log.add_entry('ryan.geyer@rightscale.com', 'Acct1', 'deleted', 'deleted')
       audit_log.audit_log.keys.should include 'ryan.geyer@rightscale.com'
@@ -47,7 +45,7 @@ describe AuditLog do
     end
 
     it 'combines entries for a single user' do
-      audit_log = AuditLog.new
+      audit_log = RsUserPolicy::AuditLog.new
       audit_log.audit_log.should == {}
       audit_log.add_entry('ryan.geyer@rightscale.com', 'Acct1', 'deleted', 'deleted')
       audit_log.add_entry('ryan.geyer@rightscale.com', 'Acct2', 'deleted', 'deleted')

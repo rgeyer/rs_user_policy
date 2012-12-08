@@ -19,21 +19,21 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'helper'))
 
-describe JsonPolicy do
+describe RsUserPolicy::Policy::JsonPolicy do
   context :initialize do
     it "Raises exception if no policy source is provided" do
-      lambda { JsonPolicy.new }.should raise_error ArgumentError
+      lambda { RsUserPolicy::Policy::JsonPolicy.new }.should raise_error ArgumentError
     end
 
     it "Doesn't freak out when bogus options are passed" do
-      lambda { JsonPolicy.new(:json => {}, :bogus_param => '') }.should_not raise_error
+      lambda { RsUserPolicy::Policy::JsonPolicy.new(:json => {}, :bogus_param => '') }.should_not raise_error
     end
 
     context :filename do
       it "Raises exception if the file does not exist" do
-        lambda { JsonPolicy.new(:filename => "foo") }.should raise_error Errno::ENOENT
+        lambda { RsUserPolicy::Policy::JsonPolicy.new(:filename => "foo") }.should raise_error Errno::ENOENT
       end
 
       it "Raises exception if input is not JSON" do
@@ -41,36 +41,36 @@ describe JsonPolicy do
         File.open(filename, 'w') do |file|
           file.write('')
         end
-        lambda { JsonPolicy.new(:filename => filename) }.should raise_error JSON::ParserError
+        lambda { RsUserPolicy::Policy::JsonPolicy.new(:filename => filename) }.should raise_error JSON::ParserError
         File.delete(filename)
       end
     end
 
     context :json_str do
       it "Raises exception if input is not JSON" do
-        lambda { JsonPolicy.new(:json_str => '') }.should raise_error JSON::ParserError
+        lambda { RsUserPolicy::Policy::JsonPolicy.new(:json_str => '') }.should raise_error JSON::ParserError
       end
     end
   end
 
   context :get_permissions do
     it "Returns an empty array if a non existent role is requested" do
-      policy = JsonPolicy.new(:json => {})
+      policy = RsUserPolicy::Policy::JsonPolicy.new(:json => {})
       policy.get_permissions('foo', '/api/accounts/123').should == []
     end
 
     it "Returns an empty array if role does not have specific account or default" do
-      policy = JsonPolicy.new(:json => { "foo" => {} })
+      policy = RsUserPolicy::Policy::JsonPolicy.new(:json => { "foo" => {} })
       policy.get_permissions('foo', '/api/accounts/123').should == []
     end
 
     it "Returns a default if specific account is not specified" do
-      policy = JsonPolicy.new(:json => { "foo" => {"default" => ["foo"]} })
+      policy = RsUserPolicy::Policy::JsonPolicy.new(:json => { "foo" => {"default" => ["foo"]} })
       policy.get_permissions('foo', '/api/accounts/123').should == ["foo"]
     end
 
     it "Returns specific account (and not default) if specified" do
-      policy = JsonPolicy.new(:json => { "foo" => {"/api/accounts/123" => ["bar"], "default" => ["foo"]} })
+      policy = RsUserPolicy::Policy::JsonPolicy.new(:json => { "foo" => {"/api/accounts/123" => ["bar"], "default" => ["foo"]} })
       policy.get_permissions('foo', '/api/accounts/123').should == ["bar"]
     end
   end

@@ -19,12 +19,12 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'helper'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..', 'helper'))
 
-describe JsonUserAssignments do
+describe RsUserPolicy::UserAssignments::JsonUserAssignments do
   context :length_and_size do
     it "Returns the number of user assigment records" do
-      user_assignments = JsonUserAssignments.new(:json => {"one" => "one", "two" => "two"})
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new(:json => {"one" => "one", "two" => "two"})
       user_assignments.length.should == 2
       user_assignments.size.should == 2
     end
@@ -32,7 +32,7 @@ describe JsonUserAssignments do
 
   context :get_role do
     it "Adds a user as immutable if the user does not already exist" do
-      user_assignments = JsonUserAssignments.new()
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new()
       user_assignments.length.should == 0
       user_assignments.get_role("email@foo.bar").should == "immutable"
       user_assignments.length.should == 1
@@ -45,7 +45,7 @@ describe JsonUserAssignments do
 
   context :delete do
     it "Removes a user from the user assignments" do
-      user_assignments = JsonUserAssignments.new(:json => {"one" => "one", "two" => "two"})
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new(:json => {"one" => "one", "two" => "two"})
       user_assignments.length.should == 2
       user_assignments.delete("one")
       user_assignments.length.should == 1
@@ -54,13 +54,13 @@ describe JsonUserAssignments do
 
   context :serialize do
     it "Raises an exception if no filename is specified" do
-      user_assignments = JsonUserAssignments.new()
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new()
       lambda { user_assignments.serialize() }.should raise_error ArgumentError
     end
 
     it "Writes a JSON file to the specified location" do
       filename = "/tmp/user_assignments_test#{Time.now.to_i}.json"
-      user_assignments = JsonUserAssignments.new()
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new()
       user_assignments.serialize(:filename => filename)
       File.exists?(filename).should == true
       JSON.parse(File.read(filename)).should == {}

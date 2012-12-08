@@ -57,7 +57,9 @@ permission_delete_order = [
   'observer'
 ]
 
-log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken") if opts[:dry_run]
+if opts[:dry_run]
+  log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken")
+end
 
 user_assignments_output = "user_assignments-#{timestamp}.json"
 

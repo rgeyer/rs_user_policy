@@ -22,5 +22,4 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require 'rspec'
-require 'utilities'
-require 'audit_log'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'rs_user_policy'))

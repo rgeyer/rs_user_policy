@@ -24,8 +24,7 @@
 require 'trollop'
 require 'right_api_client'
 require 'logger'
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'audit_log'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'utilities'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'rs_user_policy'))
 
 opts = Trollop::options do
   banner = "Manages users across many different child accounts of a RightScale Enterprise Master Account"
@@ -63,43 +62,19 @@ log.info("The dry_run option was selected, no action will be taken, but the user
 user_assignments_output = "user_assignments-#{timestamp}.json"
 
 audit_log = AuditLog.new opts.merge(:timestamp => timestamp)
-policy = {}
 
-def valid_policy_json_file?(json_file, &block)
-  # TODO: Also validate that the policy file is in the correct form.
-  # I.E. {
-  #   "policy-name": {
-  #     "account-href-or-default": ["list", "of", "permissions"]
-  #   }
-  #}
-  yield JSON.parse(File.read(json_file))
-  return true
-rescue JSON::ParserError
-  return false
-end
-
-if File.exists? opts[:policy]
-  if valid_policy_json_file?(opts[:policy]) do |p|
-      policy = p
-    end
-  else
-    log.fatal("The policy file named #{opts[:policy]} is not a properly formatted json file!")
-    exit 1
-  end
-else
-  log.fatal("The policy file named #{opts[:policy]} was not found!")
+policy = nil
+begin
+  policy = JsonPolicy.new(:filename => opts[:policy])
+rescue Exception => e
+  log.fatal("Unable to initialize policy from filename #{opts[:policy]}.  Error: #{e.message}")
   exit 1
 end
 
-user_assignments = {}
-if opts[:user_assignments]
-  if File.exists? opts[:user_assignments]
-    user_assignments = JSON.parse(File.read(opts[:user_assignments]))
-  else
-    log.warn("The user_assigments file named #{opts[:user_assignments]} was not found.  All users will be treated as immutable and written to the user_assigments output file.")
-  end
-else
-  log.warn("No user_assignments file was specified.  All users will be treated as immutable and written to the user_assigments output file.")
+user_assignments_options = opts[:user_assignments] ? { :filename => opts[:user_assignments] } : {}
+user_assignments = JsonUserAssignments.new(user_assignments_options)
+if user_assignments.length == 0
+  log.warn("No user_assignments file was specified or the file could not be found.  All users will be treated as immutable and written to the user_assigments output file.")
 end
 
 client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => opts[:rs_acct_num])
@@ -150,12 +125,10 @@ accounts.each do |account|
   log.info("There are #{users.length} unique Users")
 
   users.each do |email,user|
-    unless user_assignments.key?(email)
-      user_assignments[email] = 'immutable'
-    end
+    user_role = user_assignments.get_role(email)
     # Allow some different options about possibly prompting the user etc
     # TODO: Put this in a begin/rescue/end that allows stuff to continue and create an audit_log in the event of an error
-    case user_assignments[email]
+    case user_role
       when 'immutable'
         # By design, do nothing
       when 'delete'
@@ -173,12 +146,8 @@ accounts.each do |account|
         end
         audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
       else
-        user_policy = []
-        if policy[user_assignments[email]].key?(account[:href])
-          user_policy = policy[user_assignments[email]][account[:href]]
-        elsif policy[user_assignments[email]].key?('default')
-          user_policy = policy[user_assignments[email]]['default']
-        end
+        user_policy = policy.get_permissions(user_role, account[:href])
+
         removed = (user_policy.length == 0) ? user.keys : user.keys - user_policy
         added = user_policy - user.keys
         changes = "-#{removed} +#{added}"
@@ -206,5 +175,5 @@ deleted_users.each do |email|
   user_assignments.delete(email)
 end
 
-File.open(user_assignments_output, 'w') {|f| f.write(JSON.pretty_generate(user_assignments))}
+user_assignments.serialize(:filename => user_assignments_output)
 audit_log.write_file

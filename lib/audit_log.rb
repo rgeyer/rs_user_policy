@@ -19,16 +19,17 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'audit_log'
+
 class AuditLog
 
   attr_accessor :filename, :audit_log
 
   # Initializes a new AuditLog
   #
-  # === Parameters
-  # options(Hash):: A hash of options that impact the audit log filename.  Possible options are;
-  #   :timestamp(String):: The timestamp to append to the filename
-  #   :dry_run(Bool):: A boolean indicating if this is a dry run
+  # @param [Hash] options A hash of options that impact the audit log filename.  Possible options are;
+  #   :timestamp [String] The timestamp to append to the filename
+  #   :dry_run [Bool] A boolean indicating if this is a dry run
   def initialize(options={})
     timestamp = options[:timestamp] || Time.now.to_i
     @audit_log = {}
@@ -37,11 +38,10 @@ class AuditLog
 
   # Adds a new entry to the audit log
   #
-  # === Parameters
-  # email(String):: The email address of the user impacted by the change
-  # account(String):: The account name impacted by the change
-  # action(String):: The action performed.  Expected options are ['update_permissions', 'deleted']
-  # changes(String):: A free form description of the changes
+  # @param [String] email The email address of the user impacted by the change
+  # @param [String] account The account name impacted by the change
+  # @param [String] action The action performed.  Expected options are ['update_permissions', 'deleted']
+  # @param [String] changes A free form description of the changes
   def add_entry(email, account, action, changes)
     @audit_log[email] = [] unless audit_log[email]
     @audit_log[email] << {

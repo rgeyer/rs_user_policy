@@ -29,7 +29,7 @@ describe "RS User Policy Bin" do
   context :valid_policy_json do
     it "Exits with exception when policy file does not exist" do
       output = `#{rs_user_policy_binfile} --rs-email="foo" --rs-pass="bar" --rs-acct-num="baz" --policy="foobarbaz.txt"`
-      output.should include "The policy file named foobarbaz.txt was not found!"
+      output.should include "Unable to initialize policy from filename foobarbaz.txt.  Error: No such file or directory - foobarbaz.txt"
       $?.exitstatus.should == 1
     end
 
@@ -39,7 +39,7 @@ describe "RS User Policy Bin" do
         file.write "This is not a valid json file, not at all..."
       end
       output = `#{rs_user_policy_binfile} --rs-email="foo" --rs-pass="bar" --rs-acct-num="baz" --policy="#{tmpfile}"`
-      output.should include "The policy file named #{tmpfile} is not a properly formatted json file!"
+      output.should include "Unable to initialize policy from filename #{tmpfile}.  Error: 757: unexpected token at"
       $?.exitstatus.should == 1
       File.delete(tmpfile)
     end

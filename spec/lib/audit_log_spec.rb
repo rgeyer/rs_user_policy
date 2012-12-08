@@ -21,6 +21,8 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'helper'))
 
+require 'audit_log'
+
 describe AuditLog do
   context :initialize do
     it 'adds dryrun to audit log name when dryrun is specified' do

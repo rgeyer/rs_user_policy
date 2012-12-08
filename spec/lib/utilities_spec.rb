@@ -21,6 +21,8 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'helper'))
 
+require 'utilities'
+
 describe Utilities do
   context :id_from_href do
     it 'can get id for an account' do

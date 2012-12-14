@@ -64,5 +64,96 @@ describe RsUserPolicy::Utilities do
       callOrder[0].should == 'observer'
       callOrder.should == expectedCallOrder
     end
+
+    it "Does not clobber source hash" do
+      testHash = {
+        'admin' => '/api/permission/1',
+        'actor' => '/api/permission/2',
+        'observer' => '/api/permission/3'
+      }
+      expectedCallOrder = ['observer','admin','actor']
+      RsUserPolicy::Utilities.yield_on_keys_in_order(expectedCallOrder, testHash) do |role_title, href|
+        # Do nothing
+      end
+      testHash.length.should == 3
+      testHash.keys.should == ["admin","actor","observer"]
+    end
+  end
+
+  context :yield_on_values_in_order do
+    it 'yields to a block in the specified order' do
+      testHash = {
+        '/api/permission/1' => 'admin',
+        '/api/permission/2' => 'admin',
+        '/api/permission/3' => 'actor',
+        '/api/permission/4' => 'actor',
+        '/api/permission/5' => 'observer',
+        '/api/permission/6' => 'observer'
+      }
+      expectedCallOrder = ['observer','admin','actor']
+      callOrder = []
+      RsUserPolicy::Utilities.yield_on_values_in_order(expectedCallOrder, testHash) do |href, role_title|
+        callOrder << role_title
+      end
+      callOrder[0].should == 'observer'
+      callOrder.should == ['observer','observer','admin','admin','actor','actor']
+    end
+
+    it 'yields non ordered values after specified values in order' do
+      testHash = {
+        '/api/permission/1' => 'admin',
+        '/api/permission/2' => 'admin',
+        '/api/permission/3' => 'actor',
+        '/api/permission/4' => 'actor',
+        '/api/permission/5' => 'observer',
+        '/api/permission/6' => 'observer',
+        '/api/permission/7' => 'billing',
+        '/api/permission/8' => 'billing',
+        '/api/permission/9' => 'enterprise_manager',
+        '/api/permission/10' => 'enterprise_manager'
+      }
+      expectedCallOrder = [
+        'observer',
+        'observer',
+        'admin',
+        'admin',
+        'actor',
+        'actor',
+        'billing',
+        'billing',
+        'enterprise_manager',
+        'enterprise_manager'
+      ]
+      callOrder = []
+      RsUserPolicy::Utilities.yield_on_values_in_order(['observer', 'admin', 'actor'], testHash) do |href, role_title|
+        callOrder << role_title
+      end
+      callOrder[0].should == 'observer'
+      callOrder.should == expectedCallOrder
+    end
+
+    it "Does not clobber source hash" do
+      testHash = {
+        '/api/permission/1' => 'admin',
+        '/api/permission/2' => 'admin',
+        '/api/permission/3' => 'actor',
+        '/api/permission/4' => 'actor',
+        '/api/permission/5' => 'observer',
+        '/api/permission/6' => 'observer'
+      }
+      expectedCallOrder = ['observer','admin','actor']
+      RsUserPolicy::Utilities.yield_on_keys_in_order(expectedCallOrder, testHash) do |href, role_title|
+        # Do nothing
+      end
+      testHash.length.should == 6
+      testHash.keys.should == [
+        '/api/permission/1',
+        '/api/permission/2',
+        '/api/permission/3',
+        '/api/permission/4',
+        '/api/permission/5',
+        '/api/permission/6'
+      ]
+    end
   end
 end

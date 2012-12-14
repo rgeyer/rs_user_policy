@@ -38,13 +38,22 @@ module RsUserPolicy
     # @param [Closure] block A closure to yield to
     def self.yield_on_keys_in_order(order, hash, &block)
       order.each do |key|
-        if hash.key?(key)
-          yield key, hash.delete(key)
-        end
+        hash.select{|k,v| k == key}.each{|k,v| yield k,v }
       end
-      hash.each do |key,val|
-        yield key, val
+      hash.select{|k,v| !order.include?(k)}.each{|k,v| yield k,v}
+    end
+
+    # Operates on the key/value pairs in a hash in the order specified in 'order'
+    # followed by any key/value pairs not specified in the order
+    #
+    # @param [Array] order An array containing values in the order they should be yielded to the block
+    # @param [Hash] hash The hash to operate on in the specified order
+    # @param [Closure] block A closure to yield to
+    def self.yield_on_values_in_order(order, hash, &block)
+      order.each do |value|
+        hash.select{|k,v| v == value}.each{|k,v| yield k,v }
       end
+      hash.select{|k,v| !order.include?(v) }.each{|k,v| yield k,v }
     end
 
   end

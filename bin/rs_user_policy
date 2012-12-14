@@ -41,21 +41,6 @@ log = Logger.new(STDOUT)
 timestamp = Time::now.to_i
 deleted_users = []
 accounts = []
-user_href_resource_map = {}
-user_email_resource_map = {}
-permission_delete_order = [
-  'enterprise_manager',
-  'admin',
-  'security_manager',
-  'actor',
-  'billing',
-  'server_login',
-  'publisher',
-  'designer',
-  'library',
-  'lite_user',
-  'observer'
-]
 
 if opts[:dry_run]
   log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken")
@@ -79,26 +64,24 @@ if user_assignments.length == 0
   log.warn("No user_assignments file was specified or the file could not be found.  All users will be treated as immutable and written to the user_assigments output file.")
 end
 
+user_collection = RsUserPolicy::UserCollection.new
+
 client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => opts[:rs_acct_num])
 master_account = client.accounts(:id => opts[:rs_acct_num]).show()
-client.users().index.each do |user|
-  user_href_resource_map[user.href] = user
-  user_email_resource_map[user.email] = user
-end
+user_collection.add_users(client.users.index)
+user_collection.add_permissions(master_account.href, client.permissions.index)
 
 accounts << {:client => client, :href => master_account.href, :name => master_account.name}
 
 log.info("Operating on the Enterprise Master Account #{master_account.name}")
 
 begin
-  client.child_accounts().index.each do |child|
+  client.child_accounts.index.each do |child|
     child_client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => RsUserPolicy::Utilities.id_from_href(child.href))
     accounts << {:client => child_client, :href => child.href, :name => child.name}
 
-    child_client.users().index.each do |user|
-      user_href_resource_map[user.href] = user
-      user_email_resource_map[user.email] = user
-    end
+    user_collection.add_users(child_client.users.index)
+    user_collection.add_permissions(child.href, child_client.permissions.index)
   end
 rescue RightApi::Exceptions::ApiException => e
   if e.message =~ /Permission denied/
@@ -108,73 +91,40 @@ rescue RightApi::Exceptions::ApiException => e
   end
 end
 
-accounts.each do |account|
-  child_client = account[:client]
-  users = {}
-  user_email_resource_map.each do |email,user|
-    users[email] = {}
-  end
+begin
+  accounts.each do |account|
+    child_client = account[:client]
 
-  log.info("#{account[:name]} - #{account[:href]}")
+    log.info("#{account[:name]} - #{account[:href]}")
+    user_collection.users.each do |user|
+      email = user.email
+      user_role = user_assignments.get_role(email)
+      existing_permissions = user.get_api_permissions(account[:href])
 
-  permissions = child_client.permissions().index
-  log.info("There are #{permissions.length} unique permissions")
-  permissions.each do |permission|
-    user_email = user_href_resource_map[permission.user.href].email || permission.user.href
-    users[user_email] = {} unless users.key?(user_email)
-    users[user_email][permission.role_title] = permission.href
-  end
-  log.info("There are #{users.length} unique Users")
-
-  users.each do |email,user|
-    user_role = user_assignments.get_role(email)
-    # Allow some different options about possibly prompting the user etc
-    # TODO: Put this in a begin/rescue/end that allows stuff to continue and create an audit_log in the event of an error
-    case user_role
-      when 'immutable'
-        # By design, do nothing
-      when 'delete'
-        # Note: This is an explicit delete across all master and child accounts
-        # a user can also be effectively deleted if they have an empty list of
-        # permissions for a particular account
-        unless opts[:dry_run]
-          log.debug("Gonna delete #{JSON.pretty_generate(user)}")
-
-          RsUserPolicy::Utilities.yield_on_keys_in_order(permission_delete_order, user) do |role_title,perm_href|
-            log.debug("I KEELZ U PERMISSION! #{email} - #{role_title}")
-            child_client.permissions(:id => RsUserPolicy::Utilities.id_from_href(perm_href)).destroy()
-            deleted_users << email
+      # Allow some different options about possibly prompting the user etc
+      case user_role
+        when 'immutable'
+          # By design, do nothing
+        when 'delete'
+          # Note: This is an explicit delete across all master and child accounts
+          # a user can also be effectively deleted if they have an empty list of
+          # permissions for a particular account
+          unless opts[:dry_run]
+            log.debug("Deleting #{user.email} from #{account[:name]} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
+            user.clear_permissions(account[:href], child_client)
+            user_assignments.delete(user.email)
           end
-        end
-        audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
-      else
-        user_policy = policy.get_permissions(user_role, account[:href])
-
-        removed = (user_policy.length == 0) ? user.keys : user.keys - user_policy
-        added = user_policy - user.keys
-        changes = "-#{removed} +#{added}"
-        unless opts[:dry_run]
-          # Convert the role_title array into a hash with the hrefs
-          remove_hash = Hash[removed.map {|role| [role, user[role]]}]
-
-          RsUserPolicy::Utilities.yield_on_keys_in_order(permission_delete_order, remove_hash) do |role_title, href|
-            child_client.permissions(:id => RsUserPolicy::Utilities.id_from_href(href)).destroy()
-          end
-
-          if added.length > 0
-            add_hash = Hash[added.map {|x| [x, nil]}]
-            RsUserPolicy::Utilities.yield_on_keys_in_order(['observer'], add_hash) do |role_title,foo|
-              child_client.permissions.create({'permission[user_href]' => user_email_resource_map[email].href, 'permission[role_title]' => role_title})
-            end
-          end
-        end
-        audit_log.add_entry(email, account[:name], 'update_permissions', changes) unless removed.length + added.length == 0
+          audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
+        else
+          user_policy = policy.get_permissions(user_role, account[:href])
+          removed,added = user.set_api_permissions(user_policy, account[:href], child_client, opts)
+          changes = "-#{removed.values} +#{added.values}"
+          audit_log.add_entry(email, account[:name], 'update_permissions', changes) unless removed.length + added.length == 0
+      end
     end
   end
-end
-
-deleted_users.each do |email|
-  user_assignments.delete(email)
+rescue RightApi::Exceptions::ApiException => e
+  log.fatal("A RightScale API exception occurred - #{e}")
 end
 
 user_assignments.serialize(:filename => user_assignments_output)

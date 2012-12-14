@@ -19,7 +19,13 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+require 'flexmock'
+require 'rspec'
+
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
-require 'rspec'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'rs_user_policy'))
+
+RSpec.configure do |c|
+  c.mock_with(:flexmock)
+end

@@ -27,7 +27,11 @@ The second input file is the user assignments JSON file which assigns users to r
 User Assignment JSON should be in the following format
 
   {
-    "ryan.geyer@rightscale.com": "role_name"
+    "ryan.geyer@rightscale.com": {
+      "roles": [
+        "role_name"
+      ]
+    }
   }
 
 There are two default roles which do not need to be defined in the policy file.  "immutable" which indicates that no changes should be performed on the user, and "delete" which indicates that all permissions should be removed for the user in all accounts.

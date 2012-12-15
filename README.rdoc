@@ -74,8 +74,6 @@ Second is the user_assignments-<timestamp>.json file.  This will be a combinatio
 * Allow users to be added who are not already invited to any RS parent or child account
 * In absence of a policy.json, create a new policy.json with base roles for each account discovered (I.E. Admin, Observer, Designer, etc)
 * Perhaps allow a role to inherit from another, or be a concatenation of several?
-* Refactor policy and user_assignment file access into classes
-* Refactor API request(s) into a class
 * Handle the race condition where permissions have been deleted in the correct order, but API still throws 422 removing "observer" because the changes have not become consistent server side
   * HTTP Code: 422, Response body: A user must have the observer role. (RightApi::Exceptions::ApiException)
 

@@ -30,15 +30,15 @@ describe RsUserPolicy::UserAssignments::JsonUserAssignments do
     end
   end
 
-  context :get_role do
+  context :get_roles do
     it "Adds a user as immutable if the user does not already exist" do
       user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new()
       user_assignments.length.should == 0
-      user_assignments.get_role("email@foo.bar").should == "immutable"
+      user_assignments.get_roles("email@foo.bar").should == ["immutable"]
       user_assignments.length.should == 1
 
       # Make sure the user gets added only once
-      user_assignments.get_role("email@foo.bar").should == "immutable"
+      user_assignments.get_roles("email@foo.bar").should == ["immutable"]
       user_assignments.length.should == 1
     end
   end

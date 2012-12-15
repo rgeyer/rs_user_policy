@@ -24,11 +24,11 @@ module RsUserPolicy
     module Policy
       # Returns an array of permissions for a particular role in a particular RightScale account
       #
-      # @param [String] role Role name that permissions should be fetched for
+      # @param [Array<String>] roles An array of role names for which permissions should be fetched
       # @param [String] account_href A RightScale API 1.5 href for the RightScale account
       #
       # @return [Array<String>] A list of permissions for the role and account pair requested.  An empty array is returned if no policy exists for the requested pair
-      def get_permissions(role, account_href)
+      def get_permissions(roles, account_href)
         raise NotImplementedError, "Please implement this in your concrete class"
       end
     end

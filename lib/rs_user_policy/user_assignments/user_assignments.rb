@@ -32,13 +32,13 @@ module RsUserPolicy
         raise NotImplementedError, "Please implement this in your concrete class"
       end
 
-      # Returns the role assigned to the user.  If the user does not exist
+      # Returns the roles assigned to the user.  If the user does not exist
       # they should be automatically created with the role "immutable"
       #
       # @param [String] email The email address for the user
       #
-      # @return [String] The role assigned to the user
-      def get_role(email)
+      # @return [Array<String>] The roles assigned to the user
+      def get_roles(email)
         raise NotImplementedError, "Please implement this in your concrete class"
       end
 

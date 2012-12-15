@@ -50,8 +50,16 @@ So, given a policy file like;
 And a user assignments file like;
 
   {
-    "user1@email.com": "team1",
-    "user2@email.com": "team2"
+    "user1@email.com": {
+      "roles": [
+        "team1"
+      ]
+    },
+    "user2@email.com": {
+      "roles": [
+        "team2"
+      ]
+    }
   }
 
 And operating on the accounts 12345 and 23456;
@@ -70,7 +78,6 @@ Second is the user_assignments-<timestamp>.json file.  This will be a combinatio
 
 == TODO
 
-* Allow a user to belong to more than one "role"
 * Allow users to be added who are not already invited to any RS parent or child account
 * In absence of a policy.json, create a new policy.json with base roles for each account discovered (I.E. Admin, Observer, Designer, etc)
 * Perhaps allow a role to inherit from another, or be a concatenation of several?

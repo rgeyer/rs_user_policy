@@ -55,8 +55,8 @@ module RsUserPolicy
     #
     # @param [String] account_href The RightScale API href of the account
     # @param [RightApi::Client] client An active RightApi::Client instance for the account referenced in account_href
-    # @param [Hash] options Optional parameters where possible keys are;
-    #   :dry_run [Boolean] If true, no API calls will be made, but the return value will contain the actions which would have been taken
+    # @param [Hash] options Optional parameters
+    # @option options [Bool] :dry_run If true, no API calls will be made, but the return value will contain the actions which would have been taken
     #
     # @raise [RightApi::Exceptions::ApiException] If an unrecoverable API error has occurred.
     #
@@ -80,8 +80,8 @@ module RsUserPolicy
     # @param [Array<String>] permissions The list of desired permissions for the user in the specified account
     # @param [String] account_href The RightScale API href of the account
     # @param [RightApi::Client] client An active RightApi::Client instance for the account referenced in account_href
-    # @param [Hash] options Optional parameters where possible keys are;
-    #   :dry_run [Boolean] If true, no API calls will be made, but the return value will contain the actions which would have been taken
+    # @param [Hash] options Optional parameters
+    # @option options [Bool] :dry_run If true, no API calls will be made, but the return value will contain the actions which would have been taken
     #
     # @raise [RightApi::Exceptions::ApiException] If an unrecoverable API error has occurred.
     #

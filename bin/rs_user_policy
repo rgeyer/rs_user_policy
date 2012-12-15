@@ -98,28 +98,25 @@ begin
     log.info("#{account[:name]} - #{account[:href]}")
     user_collection.users.each do |user|
       email = user.email
-      user_role = user_assignments.get_role(email)
+      user_role = user_assignments.get_roles(email)
       existing_permissions = user.get_api_permissions(account[:href])
 
       # Allow some different options about possibly prompting the user etc
-      case user_role
-        when 'immutable'
-          # By design, do nothing
-        when 'delete'
-          # Note: This is an explicit delete across all master and child accounts
-          # a user can also be effectively deleted if they have an empty list of
-          # permissions for a particular account
-          unless opts[:dry_run]
-            log.debug("Deleting #{user.email} from #{account[:name]} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
-            user.clear_permissions(account[:href], child_client)
-            user_assignments.delete(user.email)
-          end
-          audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
-        else
-          user_policy = policy.get_permissions(user_role, account[:href])
-          removed,added = user.set_api_permissions(user_policy, account[:href], child_client, opts)
-          changes = "-#{removed.values} +#{added.values}"
-          audit_log.add_entry(email, account[:name], 'update_permissions', changes) unless removed.length + added.length == 0
+      if user_role.include?('delete')
+        # Note: This is an explicit delete across all master and child accounts
+        # a user can also be effectively deleted if they have an empty list of
+        # permissions for a particular account
+        unless opts[:dry_run]
+          log.debug("Deleting #{user.email} from #{account[:name]} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
+          user.clear_permissions(account[:href], child_client)
+          user_assignments.delete(user.email)
+        end
+        audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
+      else
+        user_policy = policy.get_permissions(user_role, account[:href])
+        removed,added = user.set_api_permissions(user_policy, account[:href], child_client, opts)
+        changes = "-#{removed.values} +#{added.values}"
+        audit_log.add_entry(email, account[:name], 'update_permissions', changes) unless removed.length + added.length == 0
       end
     end
   end

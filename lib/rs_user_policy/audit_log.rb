@@ -26,9 +26,9 @@ module RsUserPolicy
 
     # Initializes a new AuditLog
     #
-    # @param [Hash] options A hash of options that impact the audit log filename.  Possible options are;
-    #   :timestamp [String] The timestamp to append to the filename
-    #   :dry_run [Bool] A boolean indicating if this is a dry run
+    # @param [Hash] options A hash of options that impact the audit log filename.
+    # @option options [String] :timestamp The timestamp to append to the filename
+    # @option options [Bool] :dry_run A boolean indicating if this is a dry run
     def initialize(options={})
       timestamp = options[:timestamp] || Time.now.to_i
       @audit_log = {}

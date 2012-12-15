@@ -32,10 +32,10 @@ module RsUserPolicy
       # If more than one source is passed into options, the order of preference will be
       # [:json, :json_str, :filename]
       #
-      # @param [Hash] options A hash of inputs for the new JSONPolicy, where the keys are;
-      #   :json [Hash] A hash containing the policy
-      #   :json_str [String] A JSON string containing the policy
-      #   :filename [String] Path and filename to a file containing the policy in JSON
+      # @param [Hash] options A hash of inputs for the new JSONPolicy
+      # @option options [Hash] :json A hash containing the policy
+      # @option options [String] :json_str A JSON string containing the policy
+      # @option options [String] :filename Path and filename to a file containing the policy in JSON
       #
       # @raise [ArgumentError] If neither a filename or json object were supplied
       # @raise [Errno::ENOENT] If :filename was specified but the policy file does not exist
@@ -58,16 +58,18 @@ module RsUserPolicy
 
       # Returns an array of permissions for a particular role in a particular RightScale account
       #
-      # @param [String] role Role name that permissions should be fetched for
+      # @param [Array<String>] roles An array of role names for which permissions should be fetched
       # @param [String] account_href A RightScale API 1.5 href for the RightScale account
       #
       # @return [Array<String>] A list of permissions for the role and account pair requested.  An empty array is returned if no policy exists for the requested pair
-      def get_permissions(role, account_href)
-        if !@policy.has_key?(role)
-          []
-        else
-          @policy[role][account_href] || @policy[role]['default'] || []
+      def get_permissions(roles, account_href)
+        permissions = []
+        roles.each do |role|
+          if @policy.has_key?(role)
+            permissions = permissions + (@policy[role][account_href] || @policy[role]['default'] || [])
+          end
         end
+        permissions.uniq
       end
 
       private

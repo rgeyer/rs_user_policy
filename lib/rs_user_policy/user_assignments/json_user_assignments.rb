@@ -33,9 +33,9 @@ module RsUserPolicy
       # [:json, :json_str, :filename]
       #
       # @param [Hash] options A hash of inputs for the new JsonUserAssignments, where the keys are;
-      #   :json [Hash] A hash containing the user assignments
-      #   :json_str [String] A JSON string containing the user assignments
-      #   :filename [String] Path and filename to a file containing the user assignments in JSON
+      # @option options [Hash] :json A hash containing the user assignments
+      # @option options [String] :json_str A JSON string containing the user assignments
+      # @option options [String] :filename Path and filename to a file containing the user assignments in JSON
       #
       # @raise [Errno::ENOENT] If :filename was specified but the policy file does not exist
       # @raise [JSON::ParserError] If the policy is not valid JSON
@@ -67,18 +67,18 @@ module RsUserPolicy
         self.length
       end
 
-      # Returns the role assigned to the user.  If the user does not exist
+      # Returns the roles assigned to the user.  If the user does not exist
       # they should be automatically created with the role "immutable"
       #
       # @param [String] email The email address for the user
       #
-      # @return [String] The role assigned to the user
-      def get_role(email)
+      # @return [Array<String>] The roles assigned to the user
+      def get_roles(email)
         # TODO: This seems expensive to do in an accessor?
         unless @user_assignments.key?(email)
-          @user_assignments[email] = 'immutable'
+          @user_assignments[email] = {'roles' => ['immutable']}
         end
-        @user_assignments[email]
+        @user_assignments[email]['roles']
       end
 
       # Deletes a user from the user assignments
@@ -93,7 +93,7 @@ module RsUserPolicy
       # DB flushes or write back to a source file.
       #
       # @param [Hash] options A hash containing only one key;
-      #   :filename [String] The filename to write out the JSON state of this JsonUserAssignments object
+      # @option options [String] :filename The filename to write out the JSON state of this JsonUserAssignments object
       #
       # @raise [ArgumentError] When no output file is specified
       def serialize(options={})

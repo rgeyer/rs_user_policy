@@ -56,22 +56,31 @@ describe RsUserPolicy::Policy::JsonPolicy do
   context :get_permissions do
     it "Returns an empty array if a non existent role is requested" do
       policy = RsUserPolicy::Policy::JsonPolicy.new(:json => {})
-      policy.get_permissions('foo', '/api/accounts/123').should == []
+      policy.get_permissions(['foo'], '/api/accounts/123').should == []
     end
 
     it "Returns an empty array if role does not have specific account or default" do
       policy = RsUserPolicy::Policy::JsonPolicy.new(:json => { "foo" => {} })
-      policy.get_permissions('foo', '/api/accounts/123').should == []
+      policy.get_permissions(['foo'], '/api/accounts/123').should == []
     end
 
     it "Returns a default if specific account is not specified" do
       policy = RsUserPolicy::Policy::JsonPolicy.new(:json => { "foo" => {"default" => ["foo"]} })
-      policy.get_permissions('foo', '/api/accounts/123').should == ["foo"]
+      policy.get_permissions(['foo'], '/api/accounts/123').should == ["foo"]
     end
 
     it "Returns specific account (and not default) if specified" do
       policy = RsUserPolicy::Policy::JsonPolicy.new(:json => { "foo" => {"/api/accounts/123" => ["bar"], "default" => ["foo"]} })
-      policy.get_permissions('foo', '/api/accounts/123').should == ["bar"]
+      policy.get_permissions(['foo'], '/api/accounts/123').should == ["bar"]
+    end
+
+    it "Returns greatest permissions from many roles" do
+      policy = RsUserPolicy::Policy::JsonPolicy.new(:json => {
+        "foo" => {"/api/accounts/123" => ["bar"], "default" => ["foo"]},
+        "bar" => {"default" => ["baz"]}
+      })
+      policy.get_permissions(['foo','bar'], '/api/accounts/123').should == ['bar','baz']
+      policy.get_permissions(['foo','bar'], '/api/accounts/foo').should == ['foo','baz']
     end
   end
 end

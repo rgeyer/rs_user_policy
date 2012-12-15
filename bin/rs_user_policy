@@ -112,7 +112,7 @@ begin
           user_assignments.delete(user.email)
         end
         audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
-      else
+      elsif !user_role.include?("immutable")
         user_policy = policy.get_permissions(user_role, account[:href])
         removed,added = user.set_api_permissions(user_policy, account[:href], child_client, opts)
         changes = "-#{removed.values} +#{added.values}"

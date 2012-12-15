@@ -35,6 +35,7 @@ User Assignment JSON should be in the following format
   }
 
 There are two default roles which do not need to be defined in the policy file.  "immutable" which indicates that no changes should be performed on the user, and "delete" which indicates that all permissions should be removed for the user in all accounts.
+Both "immutable" and "delete", if present will take precedence over any other roles assigned to the user.
 
 Many email:role pairs can be specified. in the user assignments JSON
 

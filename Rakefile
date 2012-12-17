@@ -25,13 +25,9 @@ directory gemtask.package_dir
 
 CLEAN.include(gemtask.package_dir)
 
-require 'rdoc/task'
-Rake::RDocTask.new do |rdoc|
+require 'yard'
+YARD::Rake::YardocTask.new do |t|
 
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "rs_demo_users 0.0.1"
-  rdoc.rdoc_files.include('README*')
-  rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
 # == Unit tests == #

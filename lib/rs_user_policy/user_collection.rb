@@ -37,7 +37,7 @@ module RsUserPolicy
     # include the specified users.  The users RightScale API href is used
     # as the unique identifier for deduplication
     #
-    # @param [Array<RightApi::ResourceDetail>] An array of ResourceDetail from the Right API Client for users.  Returned by client.users.index
+    # @param [Array<RightApi::ResourceDetail>] users An array of ResourceDetail from the Right API Client for users.  Returned by client.users.index
     def add_users(users)
       users.each do |user|
         unless @users_by_href.has_key?(user.href)

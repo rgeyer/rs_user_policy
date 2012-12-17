@@ -5,3 +5,6 @@ policy*.json
 *.iws
 *.iml
 pkg/*
+.DS_Store
+.yardoc
+doc/*

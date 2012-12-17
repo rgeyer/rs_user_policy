@@ -80,6 +80,19 @@ describe RsUserPolicy::User do
 
       user.clear_permissions('/api/accounts/123', nil, :dry_run => true).should == {'hrefperm' => 'observer', 'hrefperm1' => 'admin'}
     end
+
+    it "clears cached api permissions" do
+      observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
+      admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
+      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user.add_permission('/api/accounts/123', observer_perm)
+      user.add_permission('/api/accounts/123', admin_perm)
+
+      flexmock(RsUserPolicy::RightApi::PermissionUtilities).should_receive(:destroy_permissions).once()
+
+      user.clear_permissions('/api/accounts/123', nil)
+      user.get_api_permissions('/api/accounts/123').should == []
+    end
   end
 
   context :set_api_permissions do
@@ -96,20 +109,21 @@ describe RsUserPolicy::User do
 
     it "Only adds permissions when desired permissions are a superset of current permissions" do
       permissions_src = flexmock(:role_title => "observer", :href => "hrefperm")
+      client = flexmock(:permissions => flexmock(:index => [permissions_src]))
       user = RsUserPolicy::User.new(@user_email, @user_href)
       user.add_permission('/api/accounts/123', permissions_src)
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:destroy_permissions).
         once().
-        with([], nil).
+        with([], client).
         and_return({})
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:create_permissions).
         once().
-        with(FlexMock.hsh(@user_href => {'admin' => nil}), nil).
+        with(FlexMock.hsh(@user_href => {'admin' => nil}), client).
         and_return({@user_href => {'admin' => '/api/permissions/1'}})
 
-      removed,added = user.set_api_permissions(['observer', 'admin'], '/api/accounts/123', nil)
+      removed,added = user.set_api_permissions(['observer', 'admin'], '/api/accounts/123', client)
       removed.should == {}
       added.should == {'/api/permissions/1' => 'admin'}
     end
@@ -117,6 +131,7 @@ describe RsUserPolicy::User do
     it "Only removes permissions when desired permissions are a subset of current permissions" do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
+      client = flexmock(:permissions => flexmock(:index => [observer_perm]))
       user = RsUserPolicy::User.new(@user_email, @user_href)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
@@ -124,15 +139,15 @@ describe RsUserPolicy::User do
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:create_permissions).
         once().
-        with(FlexMock.hsh(@user_href => {}), nil).
+        with(FlexMock.hsh(@user_href => {}), client).
         and_return(@user_href => {})
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:destroy_permissions).
         once().
-        with([admin_perm], nil).
+        with([admin_perm], client).
         and_return('hrefperm1' => 'admin')
 
-      removed,added = user.set_api_permissions(['observer'], '/api/accounts/123', nil)
+      removed,added = user.set_api_permissions(['observer'], '/api/accounts/123', client)
       removed.should == {'hrefperm1' => 'admin'}
       added.should == {}
     end
@@ -140,6 +155,7 @@ describe RsUserPolicy::User do
     it "Both adds and removes when desired permissions require such" do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
+      client = flexmock(:permissions => flexmock(:index => [observer_perm]))
       user = RsUserPolicy::User.new(@user_email, @user_href)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
@@ -147,15 +163,15 @@ describe RsUserPolicy::User do
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:create_permissions).
         once().
-        with(FlexMock.hsh(@user_href => {'publisher' => nil}), nil).
+        with(FlexMock.hsh(@user_href => {'publisher' => nil}), client).
         and_return(@user_href => {'publisher' => '/api/permissions/1'})
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:destroy_permissions).
         once().
-        with([admin_perm], nil).
+        with([admin_perm], client).
         and_return('hrefperm1' => 'admin')
 
-      removed,added = user.set_api_permissions(['observer','publisher'], '/api/accounts/123', nil)
+      removed,added = user.set_api_permissions(['observer','publisher'], '/api/accounts/123', client)
       removed.should == {'hrefperm1' => 'admin'}
       added.should == {'/api/permissions/1' => 'publisher'}
     end
@@ -201,6 +217,32 @@ describe RsUserPolicy::User do
       removed,added = user.set_api_permissions(['observer'], '/api/accounts/123', nil, :dry_run => true)
       removed.should == {'hrefperm1' => 'admin'}
       added.should == {}
+    end
+
+    it "sets cached api permissions" do
+      observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
+      admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
+      client = flexmock(:permissions => flexmock(:index => [observer_perm]))
+
+      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user.add_permission('/api/accounts/123', observer_perm)
+      user.add_permission('/api/accounts/123', admin_perm)
+
+      flexmock(RsUserPolicy::RightApi::PermissionUtilities).
+        should_receive(:create_permissions).
+        once().
+        with(FlexMock.hsh(@user_href => {}), client).
+        and_return(@user_href => {})
+      flexmock(RsUserPolicy::RightApi::PermissionUtilities).
+        should_receive(:destroy_permissions).
+        once().
+        with([admin_perm], client).
+        and_return('hrefperm1' => 'admin')
+
+      removed,added = user.set_api_permissions(['observer'], '/api/accounts/123', client)
+      removed.should == {'hrefperm1' => 'admin'}
+      added.should == {}
+      user.get_api_permissions('/api/accounts/123').should == [observer_perm]
     end
   end
 end

@@ -31,7 +31,7 @@ opts = Trollop::options do
 
   opt :rs_email, "You RightScale User Email Address", :type => :string, :required => true
   opt :rs_pass, "Your RightScale User Password", :type => :string, :required => true
-  opt :rs_acct_num, "A RightScale Enterprise Master Account ID", :type => :string, :required => true
+  opt :rs_acct_num, "A RightScale Enterprise Master Account ID", :type => :string, :multi => true, :required => true
   opt :policy, "The path to a JSON file containing the role to permissions policy to enforce", :type => :string, :required => true
   opt :user_assignments, "The path to a JSON file containing email address => role pairs for user assignments", :type => :string
   opt :dry_run, "A flag indicating that no changes should be made, only the user_assignments.json should be evaluated (or created) and the audit_log.json produced"
@@ -66,40 +66,30 @@ end
 
 user_collection = RsUserPolicy::UserCollection.new
 
-client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => opts[:rs_acct_num])
-master_account = client.accounts(:id => opts[:rs_acct_num]).show()
-user_collection.add_users(client.users.index)
-user_collection.add_permissions(master_account.href, client.permissions.index)
+multi_client = RsUserPolicy::RightApi::MultiClient.new(opts[:rs_email], opts[:rs_pass], opts[:rs_acct_num])
 
-accounts << {:client => client, :href => master_account.href, :name => master_account.name}
-
-log.info("Operating on the Enterprise Master Account #{master_account.name}")
-
-begin
-  client.child_accounts.index.each do |child|
-    child_client = RightApi::Client.new(:email => opts[:rs_email], :password => opts[:rs_pass], :account_id => RsUserPolicy::Utilities.id_from_href(child.href))
-    accounts << {:client => child_client, :href => child.href, :name => child.name}
-
-    user_collection.add_users(child_client.users.index)
-    user_collection.add_permissions(child.href, child_client.permissions.index)
-  end
-rescue RightApi::Exceptions::ApiException => e
-  if e.message =~ /Permission denied/
-    log.warn("#{master_account.name} is not an Enterprise Master, or you do not have the enterprise_manager permission.  No child accounts will be operated on.")
-  else
-    raise e
-  end
+# Iterate over all accounts once to discover users and their permissions
+multi_client.each do |account_id, account|
+  child_client = account[:client]
+  child_account = child_client.accounts(:id => account_id).show()
+  account_href = child_account.href
+  user_collection.add_users(child_client.users.index)
+  user_collection.add_permissions(account_href, child_client.permissions.index)
 end
 
+# Now iterate over all accounts to do actual permission assignments.
 begin
-  accounts.each do |account|
+  multi_client.each do |account_id,account|
     child_client = account[:client]
+    child_account = child_client.accounts(:id => account_id).show()
+    account_name = child_account.name
+    account_href = child_account.href
 
-    log.info("#{account[:name]} - #{account[:href]}")
+    log.info("#{account_name} - #{account_href}")
     user_collection.users.each do |user|
       email = user.email
       user_role = user_assignments.get_roles(email)
-      existing_permissions = user.get_api_permissions(account[:href])
+      existing_permissions = user.get_api_permissions(account_href)
 
       # Allow some different options about possibly prompting the user etc
       if user_role.include?('delete')
@@ -107,21 +97,24 @@ begin
         # a user can also be effectively deleted if they have an empty list of
         # permissions for a particular account
         unless opts[:dry_run]
-          log.debug("Deleting #{user.email} from #{account[:name]} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
-          user.clear_permissions(account[:href], child_client)
-          user_assignments.delete(user.email)
+          log.debug("Deleting #{user.email} from #{account_name} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
+          user.clear_permissions(account_href, child_client)
         end
-        audit_log.add_entry(email, account[:name], 'deleted', 'deleted')
+        audit_log.add_entry(email, account_name, 'deleted', 'deleted')
       elsif !user_role.include?("immutable")
-        user_policy = policy.get_permissions(user_role, account[:href])
-        removed,added = user.set_api_permissions(user_policy, account[:href], child_client, opts)
+        user_policy = policy.get_permissions(user_role, account_href)
+        removed,added = user.set_api_permissions(user_policy, account_href, child_client, :dry_run => opts[:dry_run])
         changes = "-#{removed.values} +#{added.values}"
-        audit_log.add_entry(email, account[:name], 'update_permissions', changes) unless removed.length + added.length == 0
+        audit_log.add_entry(email, account_name, 'update_permissions', changes) unless removed.length + added.length == 0
       end
     end
   end
 rescue RightApi::Exceptions::ApiException => e
   log.fatal("A RightScale API exception occurred - #{e}")
+end
+
+user_collection.users.each do |user|
+  user_assignments.delete(user.email) if user.permissions == {}
 end
 
 user_assignments.serialize(:filename => user_assignments_output)

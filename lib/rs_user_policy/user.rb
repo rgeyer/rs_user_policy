@@ -21,7 +21,7 @@
 
 module RsUserPolicy
   class User
-    attr_reader :email, :href
+    attr_reader :email, :href, :permissions
 
     # Initializes read only attributes for an RsUserPolicy::User
     #
@@ -67,10 +67,12 @@ module RsUserPolicy
       if options[:dry_run]
         Hash[current_permissions.map{|p| [p.href, p.role_title]}]
       else
-        RsUserPolicy::RightApi::PermissionUtilities.destroy_permissions(
+        retval = RsUserPolicy::RightApi::PermissionUtilities.destroy_permissions(
           current_permissions,
           client
         )
+        @permissions.delete(account_href)
+        retval
       end
     end
 
@@ -91,7 +93,9 @@ module RsUserPolicy
       existing_api_permissions_response = get_api_permissions(account_href)
       existing_api_permissions = Hash[existing_api_permissions_response.map{|p| [p.role_title, p] }]
       if permissions.length == 0
-        return clear_permissions(account_href, client, options), {}
+        removed = clear_permissions(account_href, client, options)
+        @permissions.delete(account_href)
+        return removed, {}
       else
         permissions_to_remove = (existing_api_permissions.keys - permissions).map{|p| existing_api_permissions[p]}
         remove_response = Hash[permissions_to_remove.map{|p| [p.href, p.role_title]}]
@@ -111,6 +115,8 @@ module RsUserPolicy
         else
           add_response = RsUserPolicy::RightApi::PermissionUtilities.create_permissions(permissions_to_add, client)
         end
+
+        @permissions[account_href] = client.permissions.index(:filter => ["user_href==#{@href}"]) unless options[:dry_run]
 
         return remove_response, Hash[add_response[@href].keys.map{|p| [add_response[@href][p],p]}]
       end

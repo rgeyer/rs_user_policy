@@ -109,6 +109,8 @@ This tool can also be used to create net-new users who have either never used Ri
 
 The order of the additional parameters does not matter.  The properties list can also include "identity_provider_href" and "principal_uid" or "password" to specify the users authentication details.  If no authentication details are supplied a random secure password will be generated, and written to the output user_assignments.json file.
 
+If a user with the specified email already exists, but that user does not have any permissions in the account(s) targetted by the tool, these additional properties are still required, but will be ignored.
+
 == Output
 
 When the script is run, it will produce two JSON files as output.

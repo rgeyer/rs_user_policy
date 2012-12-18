@@ -24,7 +24,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'helper')
 describe RsUserPolicy::UserCollection do
   context :add_users do
     it "Creates a hash with the user href as the key, and a hash with the email and href as the value" do
-      users_src = [flexmock(:email => 'foo@bar.baz', :href => 'hrefhere')]
+      users_src = {'hrefhere' => 'foo@bar.baz'}
       usercol = RsUserPolicy::UserCollection.new
       usercol.users.length.should == 0
       usercol.add_users(users_src)
@@ -32,7 +32,7 @@ describe RsUserPolicy::UserCollection do
     end
 
     it "Does not clobber existing users" do
-      users_src = [flexmock(:email => 'foo@bar.baz', :href => 'hrefhere')]
+      users_src = {'hrefhere' => 'foo@bar.baz'}
       usercol = RsUserPolicy::UserCollection.new
       usercol.add_users(users_src)
 
@@ -54,8 +54,9 @@ describe RsUserPolicy::UserCollection do
 
   context :add_permissions do
     it "Can assign permissions" do
-      users_src = [flexmock(:email => 'foo@bar.baz', :href => 'hrefhere')]
-      permissions_src = [flexmock(:user => users_src.first, :role_title => "observer", :href => "hrefperm")]
+      users_mock = [flexmock(:email => 'foo@bar.baz', :href => 'hrefhere')]
+      users_src = {'hrefhere' => 'foo@bar.baz'}
+      permissions_src = [flexmock(:user => users_mock.first, :role_title => "observer", :href => "hrefperm")]
       usercol = RsUserPolicy::UserCollection.new
       usercol.add_users(users_src)
       usercol.add_permissions('/api/accounts/123', permissions_src)
@@ -63,9 +64,9 @@ describe RsUserPolicy::UserCollection do
     end
 
     it "Can assign permissions to a user who isn't already in existence" do
-      users_src = [flexmock(:email => 'foo@bar.baz', :href => 'hrefhere')]
+      users_src = {'hrefhere' => 'foo@bar.baz'}
       permissions_src = [flexmock(
-          :user => flexmock(:email => 'foo1@bar.baz', :href => 'hreftwo'),
+          :user => flexmock(:href => "hreftwo", :show => flexmock(:email => 'foo1@bar.baz', :href => 'hreftwo')),
           :role_title => "observer",
           :href => "hrefperm"
         )

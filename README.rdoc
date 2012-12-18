@@ -1,11 +1,31 @@
 = rs_user_policy
 
-A useful tool for managing many users across many child accounts in a RightScale Enterprise Edition
+A useful tool for managing many users across many RightScale accounts.
 
 While the tests are not exhaustive, the current build status is..
 {<img src="https://travis-ci.org/rgeyer/rs_user_policy.png" />}[https://travis-ci.org/rgeyer/rs_user_policy]
 
 == Usage
+
+You must pass in your RightScale authentication information, and a policy file.  You can also specify one or many RightScale accounts using the --rs-acct-num or -a parameters.  If an account that you specify is an Enterprise Master account, all Enterprise Children accounts will automatically be included.
+
+  Options:
+            --rs-email, -r <s>:   You RightScale User Email Address
+             --rs-pass, -s <s>:   Your RightScale User Password
+         --rs-acct-num, -a <s>:   A RightScale Enterprise Master Account ID
+              --policy, -p <s>:   The path to a JSON file containing the role to permissions policy to enforce
+    --user-assignments, -u <s>:   The path to a JSON file containing email address => role pairs for user assignments
+                 --dry-run, -d:   A flag indicating that no changes should be made, only the user_assignments.json should be evaluated (or created) and
+                                  the audit_log.json produced
+                    --help, -h:   Show this message
+
+Example (One account)
+  rs_user_policy -r "foo@bar.baz" -s "password" -p policy.json -u user_assignments.json -a 12345
+
+Example (Multiple accounts)
+  rs_user_policy -r "foo@bar.baz" -s "password" -p policy.json -u user_assignments.json -a 12345 -a 67891 -a 11121
+
+=== Managing existing user permissions
 
 The binary contained in this gem accepts two files as inputs to determine it's behavior.  The first, is a policy JSON file which specifies the permissions to be applied to users.
 
@@ -73,6 +93,22 @@ user2 will be assigned observer and lite_user rights on account 12345, and obser
 
 Got that?  Cool!
 
+=== Creating new users
+
+This tool can also be used to create net-new users who have either never used RightScale, or who have never been associated with one of the accounts targetted by the tool.  For those type of users some additional parameters are necessary in the user_assignments source file.  The minimum set of properties is ["roles", "company", "first_name", "last_name", "phone"]
+
+  {
+    "net@new.user": {
+      "roles": ["team1"],
+      "company": "RightScale",
+      "first_name": "Net",
+      "last_name": "New",
+      "phone": "9999999999"
+    }
+  }
+
+The order of the additional parameters does not matter.  The properties list can also include "identity_provider_href" and "principal_uid" or "password" to specify the users authentication details.  If no authentication details are supplied a random secure password will be generated, and written to the output user_assignments.json file.
+
 == Output
 
 When the script is run, it will produce two JSON files as output.
@@ -83,11 +119,11 @@ Second is the user_assignments-<timestamp>.json file.  This will be a combinatio
 
 == TODO
 
-* Allow users to be added who are not already invited to any RS parent or child account
 * In absence of a policy.json, create a new policy.json with base roles for each account discovered (I.E. Admin, Observer, Designer, etc)
 * Perhaps allow a role to inherit from another, or be a concatenation of several?
 * Handle the race condition where permissions have been deleted in the correct order, but API still throws 422 removing "observer" because the changes have not become consistent server side
   * HTTP Code: 422, Response body: A user must have the observer role. (RightApi::Exceptions::ApiException)
+  * 2012/12/18 - This does not appear to be an issue any longer.  Or at least I am not encountering it anymore.  Perhaps this was a transient issue?
 
 == Copyright
 

@@ -56,5 +56,15 @@ module RsUserPolicy
       hash.select{|k,v| !order.include?(v) }.each{|k,v| yield k,v }
     end
 
+    def self.generate_compliant_password(size=12)
+      chars = (
+        ('a'..'z').to_a +
+        ('A'..'Z').to_a +
+        ('0'..'9').to_a +
+        ["!","@","#","$","%","^","&","*","(",")","-","_","=","+"]
+      ) - %w(i o 0 1 l 0)
+      (1..size).collect{|a| chars[rand(chars.size)] }.join
+    end
+
   end
 end

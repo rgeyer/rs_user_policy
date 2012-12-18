@@ -37,23 +37,26 @@ module RsUserPolicy
     # include the specified users.  The users RightScale API href is used
     # as the unique identifier for deduplication
     #
-    # @param [Array<RightApi::ResourceDetail>] users An array of ResourceDetail from the Right API Client for users.  Returned by client.users.index
+    # @param [Hash] users A hash where the key is a users href, and the value is the users email
     def add_users(users)
-      users.each do |user|
-        unless @users_by_href.has_key?(user.href)
-          @users_by_href[user.href] = RsUserPolicy::User.new(user.email, user.href)
+      users.each do |href, email|
+        unless @users_by_href.has_key?(href)
+          @users_by_href[href] = RsUserPolicy::User.new(email, href)
         end
       end
     end
 
-    def [](idx)
-      @users_by_href[idx]
+    def [](href)
+      @users_by_href[href]
     end
 
     def add_permissions(account_href, permissions)
       permissions.each do |permission|
         user_href = permission.user.href
-        add_users([permission.user])
+        unless @users_by_href.has_key?(user_href)
+          user = permission.user.show()
+          @users_by_href[user.href] = RsUserPolicy::User.new(user.email, user.href)
+        end
         @users_by_href[user_href].add_permission(account_href, permission)
       end
     end

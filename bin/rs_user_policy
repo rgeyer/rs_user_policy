@@ -24,6 +24,7 @@
 require 'trollop'
 require 'right_api_client'
 require 'logger'
+require 'digest/md5'
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'lib', 'rs_user_policy'))
 
 opts = Trollop::options do
@@ -39,8 +40,6 @@ end
 
 log = Logger.new(STDOUT)
 timestamp = Time::now.to_i
-deleted_users = []
-accounts = []
 
 if opts[:dry_run]
   log.info("The dry_run option was selected, no action will be taken, but the user_assignments output and audit_log files will be written reflecting the actions which would have been taken")
@@ -73,8 +72,34 @@ multi_client.each do |account_id, account|
   child_client = account[:client]
   child_account = child_client.accounts(:id => account_id).show()
   account_href = child_account.href
-  user_collection.add_users(child_client.users.index)
+  users_hash = Hash[child_client.users.index.map{|user| [user.href, user.email] }]
+  user_collection.add_users(users_hash)
   user_collection.add_permissions(account_href, child_client.permissions.index)
+end
+
+# Populate the user_assignments with hrefs
+user_collection.users.each do |user|
+  user_assignments[user.email]["href"] = user.href
+end
+
+net_new_users = user_assignments.list - user_collection.users.map{|u| u.email }
+
+net_new_users.each do |net_new_user_email|
+  client = multi_client[opts[:rs_acct_num].first()][:client]
+  user_create_params = user_assignments[net_new_user_email]
+  user_create_params = {:email => net_new_user_email}.merge(user_create_params)
+  unless user_create_params.key?("password") || (user_create_params.key?("identity_provider_href") && user_create_params.key?("principal_uid"))
+    pass = RsUserPolicy::Utilities.generate_compliant_password
+    user_create_params["password"] = pass
+    user_assignments[net_new_user_email]["password"] = pass
+  end
+  net_new_user_href = Digest::MD5.hexdigest((Time.now.to_i + rand(256)).to_s)
+  unless opts[:dry_run]
+    net_new_user = client.users.create(:user => user_create_params)
+    net_new_user_href = net_new_user.href
+  end
+  user_collection.add_users({net_new_user_href => net_new_user_email})
+  user_assignments[net_new_user_email]["href"] = net_new_user_href
 end
 
 # Now iterate over all accounts to do actual permission assignments.
@@ -114,8 +139,10 @@ rescue RightApi::Exceptions::ApiException => e
 end
 
 user_collection.users.each do |user|
-  user_assignments.delete(user.email) if user.permissions == {}
-end
+  if user_assignments.get_roles(user.email).include?("delete") && user.permissions == {}
+    user_assignments.delete(user.email)
+  end
+end unless opts[:dry_run]
 
 user_assignments.serialize(:filename => user_assignments_output)
 audit_log.write_file

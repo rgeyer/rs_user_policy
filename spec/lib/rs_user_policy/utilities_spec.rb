@@ -156,4 +156,14 @@ describe RsUserPolicy::Utilities do
       ]
     end
   end
+
+  context :generate_compliant_password do
+    it "Generates a compliant password" do
+      pass = RsUserPolicy::Utilities.generate_compliant_password
+      pass.should =~ /[A-Z]+/
+      pass.should =~ /[a-z]+/
+      pass.should =~ /[0-9]+/
+      pass.should =~ /[!@#\$%^&\*\(\)-_=\+]+/
+    end
+  end
 end

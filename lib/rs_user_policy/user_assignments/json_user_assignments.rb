@@ -75,9 +75,7 @@ module RsUserPolicy
       # @return [Array<String>] The roles assigned to the user
       def get_roles(email)
         # TODO: This seems expensive to do in an accessor?
-        unless @user_assignments.key?(email)
-          @user_assignments[email] = {'roles' => ['immutable']}
-        end
+        add_user(email)
         @user_assignments[email]['roles']
       end
 
@@ -99,6 +97,37 @@ module RsUserPolicy
       def serialize(options={})
         raise ArgumentError, "You must specify the :filename option" unless options.has_key?(:filename)
         File.open(options[:filename], 'w') {|f| f.write(JSON.pretty_generate(@user_assignments))}
+      end
+
+      # Returns a list of all user emails which have a user assignment in the source
+      #
+      # @return [Array<String>] An array of email addresses for users with a user assignment
+      def list
+        @user_assignments.keys
+      end
+
+      # Returns a hash which represents the user specified by the email address specified
+      # If the user does not exist the (see #add_user) method will be called and the
+      # user will be created.
+      #
+      # @param [String] email The email address of the user to fetch
+      #
+      # @return [Hash] A hash of key/value pairs to be passed to the RightScale API for Users#create.  This will also include a "roles" key, and may also include any other keys returned by the source
+      def [](email)
+        add_user(email)
+      end
+
+      # Adds a user to user_assignments.  If the user already exists the existing record
+      # will be returned.  Otherwise the user will be created with a single role of "immutable"
+      #
+      # @param [String] email The email address of the user to create or return
+      # @param [Hash] options Hash of property key/value pairs for the user.  The following options are known, but there can be any key in thi hash
+      # @option options [Array<String>] "roles" An array of role names for the user
+      #
+      # @return [Hash] The added or existing user where they key is the users email, and the value is a hash of key/value pairs of user properties.
+      def add_user(email, options={})
+        options = {"roles" => ["immutable"]}.merge(options)
+        @user_assignments[email] || @user_assignments[email] = options
       end
 
       private

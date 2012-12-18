@@ -67,4 +67,57 @@ describe RsUserPolicy::UserAssignments::JsonUserAssignments do
       File.delete(filename)
     end
   end
+
+  context :list do
+    it "Lists the emails of all added users" do
+      users = {
+        "foo@bar.baz" => {
+          "roles" => ["foo"],
+          "company" => "RightScale",
+          "first_name" => "Foo",
+          "last_name" => "Bar",
+          "phone" => "9999999999",
+          "password" => "password"
+        },
+        "foo1@bar.baz" => {
+          "roles" => ["foo"],
+          "company" => "RightScale",
+          "first_name" => "Foo1",
+          "last_name" => "Bar",
+          "phone" => "9999999999",
+          "password" => "password"
+        }
+      }
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new(:json => users)
+      user_assignments.list.should == ["foo@bar.baz","foo1@bar.baz"]
+    end
+  end
+
+  context :add_user do
+    it "creates a new user if one does not exist without parameters" do
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new :json => {}
+      user_assignments.length.should == 0
+      user_assignments.add_user("foo@bar.baz")
+      user_assignments.list.should == ["foo@bar.baz"]
+      user_assignments["foo@bar.baz"]["roles"].should == ["immutable"]
+    end
+
+    it "creates a new user if one does not exist with role parameter" do
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new :json => {}
+      user_assignments.length.should == 0
+      user_assignments.add_user("foo@bar.baz", "roles" => ["foo","bar"])
+      user_assignments.list.should == ["foo@bar.baz"]
+      user_assignments["foo@bar.baz"]["roles"].should == ["foo","bar"]
+    end
+
+    it "creates a new user if one does not exist with arbirary parameters" do
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new :json => {}
+      user_assignments.length.should == 0
+      user_assignments.add_user("foo@bar.baz", {"first_name" => "foo", "last_name" => "bar"})
+      user_assignments.list.should == ["foo@bar.baz"]
+      user_assignments["foo@bar.baz"]["roles"] == ["immutable"]
+      user_assignments["foo@bar.baz"]["first_name"].should == "foo"
+      user_assignments["foo@bar.baz"]["last_name"].should == "bar"
+    end
+  end
 end

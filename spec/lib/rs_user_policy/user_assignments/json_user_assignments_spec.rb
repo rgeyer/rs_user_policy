@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Ryan J. Geyer
+# Copyright (c) 2012-2013 Ryan J. Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -99,7 +99,6 @@ describe RsUserPolicy::UserAssignments::JsonUserAssignments do
       user_assignments.length.should == 0
       user_assignments.add_user("foo@bar.baz")
       user_assignments.list.should == ["foo@bar.baz"]
-      user_assignments["foo@bar.baz"]["roles"].should == ["immutable"]
     end
 
     it "creates a new user if one does not exist with role parameter" do
@@ -118,6 +117,14 @@ describe RsUserPolicy::UserAssignments::JsonUserAssignments do
       user_assignments["foo@bar.baz"]["roles"] == ["immutable"]
       user_assignments["foo@bar.baz"]["first_name"].should == "foo"
       user_assignments["foo@bar.baz"]["last_name"].should == "bar"
+    end
+
+    it "creates a new user with \"immutable\" role if one does not exist" do
+      user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new :json => {}
+      user_assignments.length.should == 0
+      user_assignments.add_user("foo@bar.baz")
+      user_assignments.list.should == ["foo@bar.baz"]
+      user_assignments["foo@bar.baz"]["roles"].should == ["immutable"]
     end
   end
 end

@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Ryan J. Geyer
+# Copyright (c) 2012-2013 Ryan J. Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -37,11 +37,11 @@ module RsUserPolicy
     # include the specified users.  The users RightScale API href is used
     # as the unique identifier for deduplication
     #
-    # @param [Hash] users A hash where the key is a users href, and the value is the users email
+    # @param [Array<RightApi::ResourceDetail>] users An array of RightAPI::ResourceDetail for the resource type "user"
     def add_users(users)
-      users.each do |href, email|
-        unless @users_by_href.has_key?(href)
-          @users_by_href[href] = RsUserPolicy::User.new(email, href)
+      users.each do |user|
+        unless @users_by_href.has_key?(user.href)
+          @users_by_href[user.href] = RsUserPolicy::User.new(user)
         end
       end
     end
@@ -55,7 +55,7 @@ module RsUserPolicy
         user_href = permission.user.href
         unless @users_by_href.has_key?(user_href)
           user = permission.user.show()
-          @users_by_href[user.href] = RsUserPolicy::User.new(user.email, user.href)
+          @users_by_href[user.href] = RsUserPolicy::User.new(user)
         end
         @users_by_href[user_href].add_permission(account_href, permission)
       end

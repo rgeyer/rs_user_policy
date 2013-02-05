@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Ryan J. Geyer
+# Copyright (c) 2012-2013 Ryan J. Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -25,12 +25,23 @@ module RsUserPolicy
 
     # Initializes read only attributes for an RsUserPolicy::User
     #
-    # @param [String] email The email address of the user
-    # @param [String] href The RightScale API href of the user
-    def initialize(email, href)
-      @email = email
-      @href = href
+    # @param [RightApi::ResourceDetail] user The user detail returned by RightApi::Client
+    def initialize(user)
+      @email = user.email
+      @href = user.href
+      @user = user
       @permissions = {}
+    end
+
+    # Converts this object to a hash which can be serialized
+    def to_hash()
+      rethash = {
+        :permissions => @permissions
+      }
+      (@user.attributes - [:links]).each do |attr_sym|
+        rethash[attr_sym.to_sym] = @user.send(attr_sym.to_s)
+      end
+      rethash
     end
 
     # Adds a single permission for a single RightScale account

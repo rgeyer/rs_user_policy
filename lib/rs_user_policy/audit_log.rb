@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Ryan J. Geyer
+# Copyright (c) 2012-2013 Ryan J. Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -39,7 +39,7 @@ module RsUserPolicy
     #
     # @param [String] email The email address of the user impacted by the change
     # @param [String] account The account name impacted by the change
-    # @param [String] action The action performed.  Expected options are ['update_permissions', 'deleted']
+    # @param [String] action The action performed.  Expected options are ['update_permissions', 'created', 'deleted']
     # @param [String] changes A free form description of the changes
     def add_entry(email, account, action, changes)
       @audit_log[email] = [] unless audit_log[email]

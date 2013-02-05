@@ -1,4 +1,4 @@
-# Copyright (c) 2012 Ryan J. Geyer
+# Copyright (c) 2012-2013 Ryan J. Geyer
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -25,11 +25,23 @@ describe RsUserPolicy::User do
   before(:all) do
     @user_email = 'email@foo.bar'
     @user_href = '/api/users/1234'
+
+    @user_resource_detail = flexmock(
+      :attributes => [:href, :email, :company, :first_name, :last_name, :phone, :updated_at, :created_at],
+      :href => @user_href,
+      :email => @user_email,
+      :company => "Company",
+      :first_name => "First",
+      :last_name => "Last",
+      :phone => "9999999999",
+      :updated_at => "2013/02/05 16:20:46 +0000",
+      :created_at => "2013/02/05 16:20:46 +0000"
+    )
   end
 
   context :initialize do
     it "Sets email, href" do
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.email.should == @user_email
       user.href.should == @user_href
     end
@@ -37,22 +49,38 @@ describe RsUserPolicy::User do
 
   context :email_accessor do
     it "Is readonly" do
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       lambda { user.email = "changed" }.should raise_error NoMethodError
     end
   end
 
   context :href_accessor do
     it "Is readonly" do
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       lambda { user.href = "changed" }.should raise_error NoMethodError
+    end
+  end
+
+  context :to_hash do
+    it "Returns the hash yo" do
+      user = RsUserPolicy::User.new(@user_resource_detail)
+      user.to_hash.should == {
+        :permissions => {},
+        :href => @user_href,:email => @user_email,
+        :company => "Company",
+        :first_name => "First",
+        :last_name => "Last",
+        :phone => "9999999999",
+        :updated_at => "2013/02/05 16:20:46 +0000",
+        :created_at => "2013/02/05 16:20:46 +0000"
+      }
     end
   end
 
   context :add_permission do
     it "Can assign permissions" do
       permissions_src = flexmock(:role_title => "observer", :href => "hrefperm")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', permissions_src)
       permissions = user.get_api_permissions('/api/accounts/123')
       permissions.length.should == 1
@@ -63,7 +91,7 @@ describe RsUserPolicy::User do
 
   context :get_api_permission do
     it "Returns an empty array if there is no record for the provided account href" do
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.get_api_permissions('/api/accounts/123').should == []
     end
   end
@@ -72,7 +100,7 @@ describe RsUserPolicy::User do
     it "Honors dry_run" do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
 
@@ -84,7 +112,7 @@ describe RsUserPolicy::User do
     it "clears cached api permissions" do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
 
@@ -98,7 +126,7 @@ describe RsUserPolicy::User do
   context :set_api_permissions do
     it "Removes all permissions if empty array is supplied" do
       permissions_src = flexmock(:role_title => "observer", :href => "hrefperm")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', permissions_src)
       flexmock(user).should_receive(:clear_permissions).once().and_return({'hrefperm' => 'observer'})
 
@@ -110,7 +138,7 @@ describe RsUserPolicy::User do
     it "Only adds permissions when desired permissions are a superset of current permissions" do
       permissions_src = flexmock(:role_title => "observer", :href => "hrefperm")
       client = flexmock(:permissions => flexmock(:index => [permissions_src]))
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', permissions_src)
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:destroy_permissions).
@@ -132,7 +160,7 @@ describe RsUserPolicy::User do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
       client = flexmock(:permissions => flexmock(:index => [observer_perm]))
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
 
@@ -156,7 +184,7 @@ describe RsUserPolicy::User do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
       client = flexmock(:permissions => flexmock(:index => [observer_perm]))
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
 
@@ -178,7 +206,7 @@ describe RsUserPolicy::User do
 
     it "Honors dry_run if empty array is supplied" do
       permissions_src = flexmock(:role_title => "observer", :href => "hrefperm")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', permissions_src)
       flexmock(user).should_receive(:clear_permissions).once().and_return({'hrefperm' => 'observer'})
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).should_receive(:destroy_permissions).never()
@@ -190,7 +218,7 @@ describe RsUserPolicy::User do
 
     it "Honors dry_run when desired permissions are a superset of current permissions" do
       permissions_src = flexmock(:role_title => "observer", :href => "hrefperm")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', permissions_src)
       flexmock(RsUserPolicy::RightApi::PermissionUtilities).
         should_receive(:destroy_permissions).never()
@@ -205,7 +233,7 @@ describe RsUserPolicy::User do
     it "Honors dry_run when desired permissions are a subset of current permissions" do
       observer_perm = flexmock(:role_title => "observer", :href => "hrefperm")
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
 
@@ -224,7 +252,7 @@ describe RsUserPolicy::User do
       admin_perm = flexmock(:role_title => "admin", :href => "hrefperm1")
       client = flexmock(:permissions => flexmock(:index => [observer_perm]))
 
-      user = RsUserPolicy::User.new(@user_email, @user_href)
+      user = RsUserPolicy::User.new(@user_resource_detail)
       user.add_permission('/api/accounts/123', observer_perm)
       user.add_permission('/api/accounts/123', admin_perm)
 

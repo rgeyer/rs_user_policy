@@ -57,9 +57,9 @@ module RsUserPolicy
     end
 
     def self.generate_compliant_password(size=12)
-      compliant = 1
+      compliant = nil
       password = ''
-      until compliant == 0
+      until compliant
         chars = (
           ('a'..'z').to_a +
           ('A'..'Z').to_a +
@@ -67,7 +67,7 @@ module RsUserPolicy
           ["!","@","#","$","%","^","&","*","(",")","-","_","=","+"]
         ) - %w(i o 0 1 l 0)
         password = (1..size).collect{|a| chars[rand(chars.size)] }.join
-        compliant = (password =~ /[A-Z]+/) || 1 & (password =~ /[a-z]+/) || 1 & (password =~ /[0-9]+/) || 1 & (password =~ /[!@#\$%^&\*\(\)-_=\+]+/) || 1
+        compliant = password =~ /^(?=.*[^a-zA-Z])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@\#\$%\^&\*\(\)\-_=\+]).+$/
       end
       password
     end

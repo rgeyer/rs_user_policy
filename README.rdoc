@@ -118,8 +118,8 @@ If a user with the specified email already exists, but that user does not have a
 
 By default, rs_user_policy assumes that RightScale is the authority for the existence of users.  Meaning, if a user exists in the user_assigments, but does not exist in RightScale, the user will not be created by rs_user_policy.  In order to override this there are two options.
 
-1) Specifying the --authority commandline option implies that ALL users who are in the user_assignments should be created with the provided parameters
-2) For individual users in the user_assignments, you can add a property named "create" with any value.  The user will be created, and the "create" property will be removed.
+1. Specifying the --authority commandline option implies that ALL users who are in the user_assignments should be created with the provided parameters
+2. For individual users in the user_assignments, you can add a property named "create" with any value.  The user will be created, and the "create" property will be removed.
 
 == Output
 

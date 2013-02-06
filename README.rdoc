@@ -10,13 +10,15 @@ While the tests are not exhaustive, the current build status is..
 You must pass in your RightScale authentication information, and a policy file.  You can also specify one or many RightScale accounts using the --rs-acct-num or -a parameters.  If an account that you specify is an Enterprise Master account, all Enterprise Children accounts will automatically be included.
 
   Options:
-            --rs-email, -r <s>:   You RightScale User Email Address
+              --rs-email, -r <s>:   You RightScale User Email Address
              --rs-pass, -s <s>:   Your RightScale User Password
          --rs-acct-num, -a <s>:   A RightScale Enterprise Master Account ID
               --policy, -p <s>:   The path to a JSON file containing the role to permissions policy to enforce
     --user-assignments, -u <s>:   The path to a JSON file containing email address => role pairs for user assignments
                  --dry-run, -d:   A flag indicating that no changes should be made, only the user_assignments.json should be evaluated (or created) and
                                   the audit_log.json produced
+               --authority, -t:   A flag indicating that all users in the user_assignments file "MUST" exist, and will always be created.  Effectively
+                                  asserting that the user_assignments is your canonical authority for users.
                     --help, -h:   Show this message
 
 Example (One account)
@@ -56,8 +58,6 @@ User Assignment JSON should be in the following format
 
 There are two default roles which do not need to be defined in the policy file.  "immutable" which indicates that no changes should be performed on the user, and "delete" which indicates that all permissions should be removed for the user in all accounts.
 Both "immutable" and "delete", if present will take precedence over any other roles assigned to the user.
-
-Many email:role pairs can be specified. in the user assignments JSON
 
 So, given a policy file like;
 
@@ -103,13 +103,23 @@ This tool can also be used to create net-new users who have either never used Ri
       "company": "RightScale",
       "first_name": "Net",
       "last_name": "New",
-      "phone": "9999999999"
+      "phone": "9999999999",
+      "create": "yes"
     }
   }
 
 The order of the additional parameters does not matter.  The properties list can also include "identity_provider_href" and "principal_uid" or "password" to specify the users authentication details.  If no authentication details are supplied a random secure password will be generated, and written to the output user_assignments.json file.
 
+*NOTE:* See the Authority section below for details on the "create" property
+
 If a user with the specified email already exists, but that user does not have any permissions in the account(s) targetted by the tool, these additional properties are still required, but will be ignored.
+
+==== Authority
+
+By default, rs_user_policy assumes that RightScale is the authority for the existence of users.  Meaning, if a user exists in the user_assigments, but does not exist in RightScale, the user will not be created by rs_user_policy.  In order to override this there are two options.
+
+1) Specifying the --authority commandline option implies that ALL users who are in the user_assignments should be created with the provided parameters
+2) For individual users in the user_assignments, you can add a property named "create" with any value.  The user will be created, and the "create" property will be removed.
 
 == Output
 
@@ -123,10 +133,9 @@ Second is the user_assignments-<timestamp>.json file.  This will be a combinatio
 
 * In absence of a policy.json, create a new policy.json with base roles for each account discovered (I.E. Admin, Observer, Designer, etc)
 * Perhaps allow a role to inherit from another, or be a concatenation of several?
-* Handle the race condition where permissions have been deleted in the correct order, but API still throws 422 removing "observer" because the changes have not become consistent server side
-  * HTTP Code: 422, Response body: A user must have the observer role. (RightApi::Exceptions::ApiException)
-  * 2012/12/18 - This does not appear to be an issue any longer.  Or at least I am not encountering it anymore.  Perhaps this was a transient issue?
+* Provide a mechanism for "temporary" users with an expiration date
+  * Perhaps allow the user to enter a different role after the expiration date, rather than being removed completely?
 
 == Copyright
 
-Copyright (c) 2012 Ryan J. Geyer. See LICENSE.txt for further details.
+Copyright (c) 2012-2013 Ryan J. Geyer. See LICENSE.txt for further details.

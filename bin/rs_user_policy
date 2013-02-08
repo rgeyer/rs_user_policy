@@ -120,8 +120,9 @@ net_new_users.each do |net_new_user_email|
     end
 
     begin
-      net_new_user = client.users.create(:user => user_create_params)
-      net_new_user_href = net_new_user.href
+      api_user = client.users.create(:user => user_create_params)
+      net_new_user_href = api_user.href
+      net_new_user = UserResourceDetailMock.new(net_new_user_email, net_new_user_href)
       user_assignments[net_new_user_email].delete("create")
     rescue RightApi::Exceptions::ApiException => e
       log.error("Failed to create a user with the following properties.\n  Properties: #{JSON.pretty_generate(user_create_params)}\n  Error: #{e}")

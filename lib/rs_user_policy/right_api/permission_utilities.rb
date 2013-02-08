@@ -44,7 +44,7 @@ module RsUserPolicy
 
       # Destroys all passed in permissions with the specified client.
       # This method handles deleting permissions in the appropriate order to avoid the dreaded;
-      # RightApi::Exceptions::ApiException: Error: HTTP Code: 422, Response body: A user must have the observer role.
+      # RightApi::ApiError: Error: HTTP Code: 422, Response body: A user must have the observer role.
       # TODO: Handle a 422 resulting from calling delete too quickly and attempting to remove "observer" when other deletes have not been committed
       #
       # @param [Array<RightApi::ResourceDetail>] permissions
@@ -53,7 +53,7 @@ module RsUserPolicy
       # @param [RightApi::Client] client
       #   An active RightApi::Client instance for the account referenced in account_href
       #
-      # @raise [RightApi::Exceptions::ApiException] If an unrecoverable API error has occurred.
+      # @raise [RightApi::ApiError] If an unrecoverable API error has occurred.
       #
       # @return [Hash] A hash where the keys are the permission hrefs destroyed, and the values are the role_title of those permissions
       def self.destroy_permissions(permissions, client)
@@ -67,7 +67,7 @@ module RsUserPolicy
 
       # Creates all the passed in permissions using the supplied client.
       # This method handles creating permissions with "observer" first in order to avoide the dreaded;
-      # RightApi::Exceptions::ApiException: Error: HTTP Code: 422, Response body: A user must have the observer role.
+      # RightApi::ApiError: Error: HTTP Code: 422, Response body: A user must have the observer role.
       #
       # @param [Hash] permissions
       #   A hash where the key is a RightScale API User href, and the value is a hash where the key is the permission role_title that the user should be granted, and the value is nil.
@@ -75,7 +75,7 @@ module RsUserPolicy
       # @param [RightApi::Client] client
       #   An active RightApi::Client instance for the account referenced in account_href
       #
-      # @raise [RightApi::Exceptions::ApiException] If an unrecoverable API error has occurred.
+      # @raise [RightApi::ApiError] If an unrecoverable API error has occurred.
       #
       # @return [Hash] The permissions input hash, where the nil values have been replaced with the href of the permission which was created.
       #

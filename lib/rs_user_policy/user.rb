@@ -36,10 +36,10 @@ module RsUserPolicy
     # Converts this object to a hash which can be serialized
     def to_hash()
       rethash = {
-        :permissions => @permissions
+        "permissions" => @permissions
       }
       (@user.attributes - [:links]).each do |attr_sym|
-        rethash[attr_sym.to_sym] = @user.send(attr_sym.to_s)
+        rethash[attr_sym.to_s] = @user.send(attr_sym.to_s)
       end
       rethash
     end
@@ -69,7 +69,7 @@ module RsUserPolicy
     # @param [Hash] options Optional parameters
     # @option options [Bool] :dry_run If true, no API calls will be made, but the return value will contain the actions which would have been taken
     #
-    # @raise [RightApi::Exceptions::ApiException] If an unrecoverable API error has occurred.
+    # @raise [RightApi::ApiError] If an unrecoverable API error has occurred.
     #
     # @return [Hash] A hash where the keys are the permission hrefs destroyed, and the keys are the role_title of those permissions
     def clear_permissions(account_href, client, options={})
@@ -96,7 +96,7 @@ module RsUserPolicy
     # @param [Hash] options Optional parameters
     # @option options [Bool] :dry_run If true, no API calls will be made, but the return value will contain the actions which would have been taken
     #
-    # @raise [RightApi::Exceptions::ApiException] If an unrecoverable API error has occurred.
+    # @raise [RightApi::ApiError] If an unrecoverable API error has occurred.
     #
     # @return [Hash,Hash] A tuple where two hashes are returned.  The keys of the hashes are the href of the permission, and the values are the role_title of the permission.  The first hash is the permissions removed, and the second hash is the permissions added
     def set_api_permissions(permissions, account_href, client, options={})

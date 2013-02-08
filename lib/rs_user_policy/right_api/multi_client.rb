@@ -62,7 +62,7 @@ module RsUserPolicy
                 :parent => account_id
               }
             end
-          rescue ::RightApi::Exceptions::ApiException => e
+          rescue ::RightApi::ApiError => e
             raise e unless e.message =~ /Permission denied/
           end
           @accounts[account_id] = this_account

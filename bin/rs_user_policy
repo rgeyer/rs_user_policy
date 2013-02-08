@@ -89,7 +89,7 @@ end
 # Populate the user_assignments with extra bits..
 user_collection.users.each do |user|
   user_hash = user.to_hash
-  user_hash.delete(:permissions)
+  user_hash.delete("permissions")
   user_assignments[user.email].merge!(user_hash)
 end
 
@@ -124,7 +124,7 @@ net_new_users.each do |net_new_user_email|
       net_new_user_href = api_user.href
       net_new_user = UserResourceDetailMock.new(net_new_user_email, net_new_user_href)
       user_assignments[net_new_user_email].delete("create")
-    rescue RightApi::Exceptions::ApiException => e
+    rescue RightApi::ApiError => e
       log.error("Failed to create a user with the following properties.\n  Properties: #{JSON.pretty_generate(user_create_params)}\n  Error: #{e}")
       next
     end
@@ -166,7 +166,7 @@ begin
       end
     end
   end
-rescue RightApi::Exceptions::ApiException => e
+rescue RightApi::ApiError => e
   log.fatal("A RightScale API exception occurred - #{e}")
 end
 

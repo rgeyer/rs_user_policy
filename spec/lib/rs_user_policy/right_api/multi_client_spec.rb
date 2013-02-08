@@ -28,7 +28,7 @@ describe RsUserPolicy::RightApi::MultiClient do
   context :length do
     it "returns the number of accounts" do
       client1 = flexmock("client")
-      client1.should_receive(:child_accounts).once.and_raise(RightApi::Exceptions::ApiException, "Permission denied")
+      client1.should_receive(:child_accounts).once.and_raise(RightApi::ApiError.new flexmock("request"), flexmock(:code => 402, :body => "Permission denied"))
       flexmock(RightApi::Client).should_receive(:new).once.and_return(client1)
 
       multi_client = RsUserPolicy::RightApi::MultiClient.new('foo@bar.baz', 'password', [1234])
@@ -39,7 +39,7 @@ describe RsUserPolicy::RightApi::MultiClient do
   context :size do
     it "returns the number of accounts" do
       client1 = flexmock("client")
-      client1.should_receive(:child_accounts).once.and_raise(RightApi::Exceptions::ApiException, "Permission denied")
+      client1.should_receive(:child_accounts).once.and_raise(RightApi::ApiError.new flexmock("request"), flexmock(:code => 402, :body => "Permission denied"))
       flexmock(RightApi::Client).should_receive(:new).once.and_return(client1)
 
       multi_client = RsUserPolicy::RightApi::MultiClient.new('foo@bar.baz', 'password', [1234])
@@ -50,7 +50,7 @@ describe RsUserPolicy::RightApi::MultiClient do
   context :array_accessor do
     it "returns the specified account" do
       client1 = flexmock("client")
-      client1.should_receive(:child_accounts).once.and_raise(RightApi::Exceptions::ApiException, "Permission denied")
+      client1.should_receive(:child_accounts).once.and_raise(RightApi::ApiError.new flexmock("request"), flexmock(:code => 402, :body => "Permission denied"))
       flexmock(RightApi::Client).should_receive(:new).once.and_return(client1)
 
       multi_client = RsUserPolicy::RightApi::MultiClient.new('foo@bar.baz', 'password', [1234])
@@ -62,7 +62,7 @@ describe RsUserPolicy::RightApi::MultiClient do
   context :initialize do
     it "handles a single non enterprise account" do
       client1 = flexmock("client")
-      client1.should_receive(:child_accounts).once.and_raise(RightApi::Exceptions::ApiException, "Permission denied")
+      client1.should_receive(:child_accounts).once.and_raise(RightApi::ApiError.new flexmock("request"), flexmock(:code => 402, :body => "Permission denied"))
       flexmock(RightApi::Client).should_receive(:new).once.and_return(client1)
 
       multi_client = RsUserPolicy::RightApi::MultiClient.new('foo@bar.baz', 'password', [1234])
@@ -77,7 +77,7 @@ describe RsUserPolicy::RightApi::MultiClient do
 
     it "handles many non enterprise accounts" do
       client1 = flexmock("client")
-      client1.should_receive(:child_accounts).twice.and_raise(RightApi::Exceptions::ApiException, "Permission denied")
+      client1.should_receive(:child_accounts).twice.and_raise(RightApi::ApiError.new flexmock("request"), flexmock(:code => 402, :body => "Permission denied"))
       flexmock(RightApi::Client).should_receive(:new).times(2).and_return(client1,client1)
 
       multi_client = RsUserPolicy::RightApi::MultiClient.new('foo@bar.baz', 'password', [1234,5678])

@@ -65,14 +65,15 @@ describe RsUserPolicy::User do
     it "Returns the hash yo" do
       user = RsUserPolicy::User.new(@user_resource_detail)
       user.to_hash.should == {
-        :permissions => {},
-        :href => @user_href,:email => @user_email,
-        :company => "Company",
-        :first_name => "First",
-        :last_name => "Last",
-        :phone => "9999999999",
-        :updated_at => "2013/02/05 16:20:46 +0000",
-        :created_at => "2013/02/05 16:20:46 +0000"
+        "permissions" => {},
+        "href" => @user_href,
+        "email" => @user_email,
+        "company" => "Company",
+        "first_name" => "First",
+        "last_name" => "Last",
+        "phone" => "9999999999",
+        "updated_at" => "2013/02/05 16:20:46 +0000",
+        "created_at" => "2013/02/05 16:20:46 +0000"
       }
     end
   end

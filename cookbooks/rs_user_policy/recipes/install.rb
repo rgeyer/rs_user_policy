@@ -18,7 +18,10 @@
 
 rightscale_marker :begin
 
+# Cover our bases by installing it in the Chef/RightScale sandbox, as
+# well as for the system
 chef_gem "rs_user_policy"
+gem "rs_user_policy"
 
 directory node["rs_user_policy"]["home"] do
   recursive true

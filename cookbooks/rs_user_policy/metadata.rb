@@ -24,7 +24,7 @@ attribute "rs_user_policy/retention_period",
   :display_name => "RightScale Retention Period",
   :description => "A value passed to find with the -mtime parameter. Any of the user_assignment JSON files or logs created past that retention period will be deleted.",
   :required => "optional",
-  :default => "-30d",
+  :default => "+30",
   :recipes => ["rs_user_policy::do_apply_policy"]
 
 attribute "rs_user_policy/user_assigments/json",

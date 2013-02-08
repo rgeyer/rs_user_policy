@@ -63,45 +63,45 @@ attribute "rs_user_policy/user/email",
   :display_name => "RightScale User Policy New User Email",
   :description => "The email address of a user who should be added to the user_assignments JSON file and created immediately",
   :required => "required",
-  :recpies => ["rs_user_policy::do_add_user","rs_user_policy::do_remove_user","rs_user_policy::do_update_user"]
+  :recipes => ["rs_user_policy::do_add_user","rs_user_policy::do_remove_user","rs_user_policy::do_update_user"]
 
 attribute "rs_user_policy/user/roles",
   :display_name => "RightScale User Policy New User Roles",
   :description => "An array of roles for a user who should be added to the user_assignments JSON file and created immtediately",
   :type => "array",
   :required => "required",
-  :recpies => ["rs_user_policy::do_add_user","rs_user_policy::do_update_user"]
+  :recipes => ["rs_user_policy::do_add_user","rs_user_policy::do_update_user"]
 
 attribute "rs_user_policy/user/company",
   :display_name => "RightScale User Policy New User Company",
   :description => "The company name for a user who should be added to the user_assignments JSON file and created immediately",
   :required => "required",
-  :recpies => ["rs_user_policy::do_add_user"]
+  :recipes => ["rs_user_policy::do_add_user"]
 
 attribute "rs_user_policy/user/first_name",
   :display_name => "RightScale User Policy New User First Name",
   :description => "The first name of a user who should be added to the user_assignments JSON file and created immediately",
   :required => "required",
-  :recpies => ["rs_user_policy::do_add_user"]
+  :recipes => ["rs_user_policy::do_add_user"]
 
 attribute "rs_user_policy/user/last_name",
   :display_name => "RightScale User Policy New User Last Name",
   :description => "The last name of a user who should be added to the user_assignments JSON file and created immediately",
   :required => "required",
-  :recpies => ["rs_user_policy::do_add_user"]
+  :recipes => ["rs_user_policy::do_add_user"]
 
 attribute "rs_user_policy/user/phone",
   :display_name => "RightScale User Policy New User Phone Number",
   :description => "The phone number of a user who should be added to the user_assignments JSON file and created immediately",
   :required => "optional",
   :default => "9999999999",
-  :recpies => ["rs_user_policy::do_add_user"]
+  :recipes => ["rs_user_policy::do_add_user"]
 
 attribute "rs_user_policy/user/passowrd",
   :display_name => "RightScale User Policy New User Password",
   :description => "The password of a user who should be added to the user_assignments JSON file and created immediately.  If not specified a random secure password will be generated for the user.",
   :required => "optional",
-  :recpies => ["rs_user_policy::do_add_user"]
+  :recipes => ["rs_user_policy::do_add_user"]
 
 attribute "rs_user_policy/apply_policy_schedule/minute",
   :display_name => "RightScale User Policy Schedule Cron Minute",

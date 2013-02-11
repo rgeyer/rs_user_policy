@@ -18,10 +18,16 @@
 
 rightscale_marker :begin
 
-# Cover our bases by installing it in the Chef/RightScale sandbox, as
-# well as for the system
-chef_gem "rs_user_policy"
-gem_package "rs_user_policy"
+ruby_block "Install rs_user_policy to the system direct from rubygems.org" do
+  block do
+    `/usr/bin/gem install rs_user_policy --no-ri --no-rdoc --source http://rubygems.org`
+
+    # right_api_client 1.5.10 has this as a runtime dependency but
+    # does not declare it properly.  Make sure this runs before
+    # rightscale::install_tools
+    `/usr/bin/gem install activesupport --no-ri --no-rdoc --source http://rubygems.org`
+  end
+end
 
 directory node["rs_user_policy"]["home"] do
   recursive true

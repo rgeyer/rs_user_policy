@@ -63,7 +63,7 @@ module RsUserPolicy
               }
             end
           rescue ::RightApi::ApiError => e
-            raise e unless e.message =~ /Permission denied/
+            raise e unless e.message =~ /enterprise/ || e.message =~ /Permission denied/
           end
           @accounts[account_id] = this_account
         end

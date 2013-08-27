@@ -36,6 +36,8 @@ class UserResourceDetailMock
   end
 end
 
+exit_code = 0
+
 opts = Trollop::options do
   banner = "Manages users across many different child accounts of a RightScale Enterprise Master Account"
 
@@ -77,13 +79,19 @@ user_collection = RsUserPolicy::UserCollection.new
 
 multi_client = RsUserPolicy::RightApi::MultiClient.new(opts[:rs_email], opts[:rs_pass], opts[:rs_acct_num])
 
+log.info("Invoked with account numbers (#{opts[:rs_acct_num].join(",")}).")
+
 # Iterate over all accounts once to discover users and their permissions
 multi_client.each do |account_id, account|
   child_client = account[:client]
   child_account = child_client.accounts(:id => account_id).show()
   account_href = child_account.href
-  user_collection.add_users(child_client.users.index)
-  user_collection.add_permissions(account_href, child_client.permissions.index)
+  users = child_client.users.index
+  permissions = child_client.permissions.index
+  user_collection.add_users(users)
+  user_collection.add_permissions(account_href, permissions)
+
+  log.info("#{child_account.name}:#{account_id} - #{child_account.href}; #{users.count} Users; #{permissions.count} Permissions")
 end
 
 # Populate the user_assignments with extra bits..
@@ -142,7 +150,6 @@ begin
     account_name = child_account.name
     account_href = child_account.href
 
-    log.info("#{account_name} - #{account_href}")
     user_collection.users.each do |user|
       email = user.email
       user_role = user_assignments.get_roles(email)
@@ -168,6 +175,7 @@ begin
   end
 rescue RightApi::ApiError => e
   log.fatal("A RightScale API exception occurred - #{e}")
+  exit_code = -1
 end
 
 user_collection.users.each do |user|
@@ -178,3 +186,5 @@ end unless opts[:dry_run]
 
 user_assignments.serialize(:filename => user_assignments_output)
 audit_log.write_file
+
+exit exit_code

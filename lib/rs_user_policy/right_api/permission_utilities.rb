@@ -34,6 +34,7 @@ module RsUserPolicy
         'security_manager',
         'actor',
         'billing',
+        'server_superuser',
         'server_login',
         'publisher',
         'designer',

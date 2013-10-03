@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rs_user_policy (0.1.8)
+    rs_user_policy (0.1.9)
       right_api_client (= 1.5.12)
       trollop (>= 1.16, < 3.0)
 
@@ -15,7 +15,7 @@ GEM
     flexmock (0.9.0)
     i18n (0.6.1)
     json (1.8.0)
-    mime-types (1.24)
+    mime-types (1.25)
     multi_json (1.5.0)
     rake (10.0.3)
     rest-client (1.6.7)

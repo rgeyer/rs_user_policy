@@ -42,7 +42,8 @@ module RsUserPolicy
           )
           this_account = {
             :client => client,
-            :has_children => false
+            :has_children => false,
+            :resource => client.accounts(:id => account_id).show()
           }
           begin
             child_accounts = client.child_accounts.index
@@ -59,7 +60,8 @@ module RsUserPolicy
               @accounts[child_account_id] = {
                 :client => child_account,
                 :has_children => false,
-                :parent => account_id
+                :parent => account_id,
+                :resource => child_account_res
               }
             end
           rescue ::RightApi::ApiError => e

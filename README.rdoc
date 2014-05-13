@@ -135,6 +135,7 @@ Second is the user_assignments-<timestamp>.json file.  This will be a combinatio
 * Perhaps allow a role to inherit from another, or be a concatenation of several?
 * Provide a mechanism for "temporary" users with an expiration date
   * Perhaps allow the user to enter a different role after the expiration date, rather than being removed completely?
+* Optionally bail out when provided user_assignments file cannot be parsed. bin/rs_user_policy:75
 
 == Copyright
 

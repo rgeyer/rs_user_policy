@@ -46,6 +46,8 @@ opts = Trollop::options do
   opt :rs_acct_num, "A RightScale Enterprise Master Account ID", :type => :string, :multi => true, :required => true
   opt :policy, "The path to a JSON file containing the role to permissions policy to enforce", :type => :string, :required => true
   opt :user_assignments, "The path to a JSON file containing email address => role pairs for user assignments", :type => :string
+  opt :empty_user_assignments_fatal, "A flag which asserts that the provided user_assigments should contain at least one user_assignment mapping.  If there are 0 user assignments found, rs_user_policy will terminate."
+  opt :audit_dir, "A directory where audit logs will be stored. By default this is the current working directory.", :type => :string
   opt :dry_run, "A flag indicating that no changes should be made, only the user_assignments.json should be evaluated (or created) and the audit_log.json produced"
   opt :authority, "A flag indicating that all users in the user_assignments file \"MUST\" exist, and will always be created.  Effectively asserting that the user_assignments is your canonical authority for users."
 end
@@ -72,7 +74,13 @@ end
 user_assignments_options = opts[:user_assignments] ? { :filename => opts[:user_assignments] } : {}
 user_assignments = RsUserPolicy::UserAssignments::JsonUserAssignments.new(user_assignments_options)
 if user_assignments.length == 0
-  log.warn("No user_assignments file was specified or the file could not be found.  All users will be treated as immutable and written to the user_assigments output file.")
+  if(opts[:empty_user_assignments_fatal])
+    log.fatal("There were 0 user_assigments from filename #{opts[:user_assigments]}.  Exitting due to empty_user_assigments_fatal being set.")
+    exit 1
+  else
+    log.warn("No user_assignments file was specified or the file could not be found.  All users will be treated as immutable and written to the user_assigments output file.")
+  end
+
 end
 
 user_collection = RsUserPolicy::UserCollection.new

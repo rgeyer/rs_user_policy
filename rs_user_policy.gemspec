@@ -1,6 +1,6 @@
 Gem::Specification.new do |gem|
   gem.name = "rs_user_policy"
-  gem.version = "0.1.9"
+  gem.version = "0.1.10"
   gem.homepage = "https://github.com/rgeyer/rs_user_policy"
   gem.license = "MIT"
   gem.summary = %Q{Manages users across many different child accounts of a RightScale Enterprise Master Account}
@@ -11,6 +11,6 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency('right_api_client', '= 1.5.12')
   gem.add_dependency('trollop', '>= 1.16', '< 3.0')
-  
+
   gem.files = Dir.glob("{lib,bin}/**/*") + ["LICENSE.txt", "README.rdoc"]
 end

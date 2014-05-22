@@ -33,6 +33,18 @@ describe RsUserPolicy::AuditLog do
       audit_log = RsUserPolicy::AuditLog.new(:timestamp => ts)
       audit_log.filename.should include "#{ts}"
     end
+
+    it 'uses provided audit directory' do
+      ts = Time.now.to_i
+      audit_log = RsUserPolicy::AuditLog.new(:audit_dir => '/foo/bar/baz')
+      audit_log.filename.should eq "/foo/bar/baz/audit_log-#{ts}.json"
+    end
+
+    it 'uses provided audit directory and handles trailing slash' do
+      ts = Time.now.to_i
+      audit_log = RsUserPolicy::AuditLog.new(:audit_dir => '/foo/bar/baz/')
+      audit_log.filename.should eq "/foo/bar/baz/audit_log-#{ts}.json"
+    end
   end
 
   context :add_entry do

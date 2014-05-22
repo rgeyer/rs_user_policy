@@ -36,9 +36,6 @@ module RsUserPolicy
       # @option options [Hash] :json A hash containing the user assignments
       # @option options [String] :json_str A JSON string containing the user assignments
       # @option options [String] :filename Path and filename to a file containing the user assignments in JSON
-      #
-      # @raise [Errno::ENOENT] If :filename was specified but the policy file does not exist
-      # @raise [JSON::ParserError] If the policy is not valid JSON
       def initialize(options={})
         begin
           if options.has_key?(:json)

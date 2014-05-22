@@ -29,10 +29,23 @@ module RsUserPolicy
     # @param [Hash] options A hash of options that impact the audit log filename.
     # @option options [String] :timestamp The timestamp to append to the filename
     # @option options [Bool] :dry_run A boolean indicating if this is a dry run
+    # @option options [String] :audit_dir The directory where the audit log should be created
     def initialize(options={})
       timestamp = options[:timestamp] || Time.now.to_i
       @audit_log = {}
-      @filename = "audit_log#{options[:dry_run] ? '_dryrun' : ''}-#{timestamp}.json"
+      @filename = ''
+
+      if options[:audit_dir]
+        @filename << ::File.join(options[:audit_dir], 'audit_log')
+      else
+        @filename << 'audit_log'
+      end
+
+      if options[:dry_run]
+        @filename << '_dryrun'
+      end
+
+      @filename << "-#{timestamp}.json"
     end
 
     # Adds a new entry to the audit log

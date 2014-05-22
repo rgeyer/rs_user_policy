@@ -37,7 +37,7 @@ end
 
 execute "Run rs_user_policy" do
   cwd node["rs_user_policy"]["user_assignments_dir"]
-  command "rs_user_policy -r #{node["rs_user_policy"]["email"]} -s #{node["rs_user_policy"]["password"]}#{acct_id_options} -p #{policy_file} -u #{user_assignment_file} -d #{audit_dir} -m > #{logfile} 2>&1"
+  command "rs_user_policy -r #{node["rs_user_policy"]["email"]} -s #{node["rs_user_policy"]["password"]}#{acct_id_options} -p #{policy_file} -u #{user_assignment_file} -d #{audit_dir} -e > #{logfile} 2>&1"
 end
 
 bash "Clean up old user_management*.json and log files" do

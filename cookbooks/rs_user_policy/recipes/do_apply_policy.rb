@@ -18,15 +18,25 @@
 
 rightscale_marker :begin
 
-unix_timestamp = Time.now.to_i
-policy_file = ::File.join(Chef::Config[:file_cache_path], "rs_user_policy.json")
-user_assignment_file = `ls -t #{node["rs_user_policy"]["user_assignments_dir"]} | head -n1`.strip
-audit_dir = node["rs_user_policy"]["audits_dir"]
-acct_id_options = ""
-logfile = ::File.join(node["rs_user_policy"]["log_dir"], "rs_user_policy-#{unix_timestamp}.log")
+policy_file = ::File.join(node['rs_user_policy']['home'], "rs_user_policy.json")
 
-node["rs_user_policy"]["account_ids"].each do |acct_id|
-  acct_id_options = "#{acct_id_options} -a #{acct_id}"
+case node['rs_user_policy']['runtime_environment']
+when 'gem'
+  unix_timestamp = Time.now.to_i
+  user_assignment_file = `ls -t #{node["rs_user_policy"]["user_assignments_dir"]} | head -n1`.strip
+  audit_dir = node["rs_user_policy"]["audits_dir"]
+  acct_id_options = ""
+  logfile = ::File.join(node["rs_user_policy"]["log_dir"], "rs_user_policy-#{unix_timestamp}.log")
+
+  node["rs_user_policy"]["account_ids"].each do |acct_id|
+    acct_id_options = "#{acct_id_options} -a #{acct_id}"
+  end
+
+  rs_user_policy_command = "rs_user_policy -r #{node["rs_user_policy"]["email"]} -s #{node["rs_user_policy"]["password"]}#{acct_id_options} -p #{policy_file} -u #{user_assignment_file} -d #{audit_dir} -e > #{logfile} 2>&1"
+when 'docker'
+  rs_user_policy_command = "docker run -v #{node['rs_user_policy']['home']}:/opt/rs_user_policy -e POLICY=/opt/rs_user_policy/rs_user_policy.json -e EMAIL=#{node['rs_user_policy']['email']} -e PASSWORD=#{node['rs_user_policy']['password']} -e ACCOUNT_IDS=#{node['rs_user_policy']['account_ids'].join(",")} -e USER_ASSIGNMENTS=latest rgeyer/rs_user_policy:#{node['rs_user_policy']['docker']['container_version']}"
+else
+  raise "#{node['rs_user_policy']['runtime_environment']} is not a supported runtime environment.  Try either 'gem' or 'docker'."
 end
 
 file policy_file do
@@ -37,7 +47,11 @@ end
 
 execute "Run rs_user_policy" do
   cwd node["rs_user_policy"]["user_assignments_dir"]
-  command "rs_user_policy -r #{node["rs_user_policy"]["email"]} -s #{node["rs_user_policy"]["password"]}#{acct_id_options} -p #{policy_file} -u #{user_assignment_file} -d #{audit_dir} -e > #{logfile} 2>&1"
+  command rs_user_policy_command
+end
+
+file policy_file do
+  action :delete
 end
 
 bash "Clean up old user_management*.json and log files" do

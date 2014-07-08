@@ -2,7 +2,7 @@
 # Cookbook Name:: rs_user_policy
 # Recipe:: install
 #
-# Copyright 2013-2014, Ryan J. Geyer
+# Copyright 2014, Ryan J. Geyer
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,13 +18,8 @@
 
 rightscale_marker :begin
 
-case node['rs_user_policy']['runtime_environment']
-when 'gem'
-  include_recipe 'rs_user_policy::install_gem'
-when 'docker'
-  include_recipe 'rs_user_policy::install_docker'
-else
-  raise "#{node['rs_user_policy']['runtime_environment']} is not a supported runtime environment.  Try either 'gem' or 'docker'."
+execute "Pull rgeyer/rs_user_policy container" do
+  command "docker pull rgeyer/rs_user_policy:#{node['rs_user_policy']['docker']['container_version']}"
 end
 
 rightscale_marker :end

@@ -173,11 +173,11 @@ then use that file as the --user-assignments input for a subsequent run.
 == TODO
 
 * In absence of a policy.json, create a new policy.json with base roles for
-each account discovered (I.E. Admin, Observer, Designer, etc)
+  each account discovered (I.E. Admin, Observer, Designer, etc)
 * Perhaps allow a role to inherit from another, or be a concatenation of several?
 * Provide a mechanism for "temporary" users with an expiration date
   * Perhaps allow the user to enter a different role after the expiration date,
-rather than being removed completely?
+    rather than being removed completely?
 * Optionally do not discover child accounts, but only use specified accounts.
 * Extend multi_client to perform tasks concurrently in multiple threads.
 

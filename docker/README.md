@@ -53,9 +53,9 @@ pulled from the user_assignments directory.
 Running with a single RightScale account, and using the "latest" user assignments
 file.
 
-  docker run -e "POLICY=$(cat ./policy.json)" -e "EMAIL=foo@bar.baz" -e "PASSWORD=password" -e "ACCOUNT_IDS=12345" -e "USER_ASSIGNMENTS=latest" rgeyer/rs_user_policy
+    docker run -e "POLICY=$(cat ./policy.json)" -e "EMAIL=foo@bar.baz" -e "PASSWORD=password" -e "ACCOUNT_IDS=12345" -e "USER_ASSIGNMENTS=latest" rgeyer/rs_user_policy
 
 Running with a data volume that contains the policy file, and specifying the
 path to the policy file.
 
-  docker run -v /path/on/host:/opt/rs_user_policy -e "POLICY=/opt/rs_user_policy/policy.json" -e "EMAIL=foo@bar.baz" -e "PASSWORD=password" -e "ACCOUNT_IDS=12345" -e "USER_ASSIGNMENTS=latest" rgeyer/rs_user_policy
+    docker run -v /path/on/host:/opt/rs_user_policy -e "POLICY=/opt/rs_user_policy/policy.json" -e "EMAIL=foo@bar.baz" -e "PASSWORD=password" -e "ACCOUNT_IDS=12345" -e "USER_ASSIGNMENTS=latest" rgeyer/rs_user_policy

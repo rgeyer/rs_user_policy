@@ -113,13 +113,11 @@ attribute "rs_user_policy/apply_policy_schedule/minute",
 attribute "rs_user_policy/runtime_environment",
   :display_name => "RightScale User Policy Runtime Environment",
   :description => "Where the rs_user_policy binaries will run",
-  :required => "required",
   :choice => ["gem", "docker"],
   :default => "gem",
   :recipes => ["rs_user_policy::install", "rs_user_policy::do_apply_policy"]
 
 attribute "rs_user_policy/docker/container_version",
   :display_name => "RightScale User Policy Docker Container Version",
-  :required => "required",
   :default => "latest",
   :recipes => ["rs_user_policy::install", "rs_user_policy::install_docker", "rs_user_policy::do_apply_policy"]

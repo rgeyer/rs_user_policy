@@ -3,11 +3,13 @@ maintainer_email "me@ryangeyer.com"
 license          "All rights reserved"
 description      "Installs/Configures rs_user_policy"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          "0.2.0"
+version          "0.2.1"
 
 depends "rightscale"
 
 recipe "rs_user_policy::install", "Installs and initially configures rs_user_policy"
+recipe "rs_user_policy::install_docker", "Pulls the docker container for rs_user_policy"
+recipe "rs_user_policy::install_gem", "Installs and initially configures rs_user_policy"
 recipe "rs_user_policy::do_apply_policy", "Runs rs_user_policy with the specified parameters"
 recipe "rs_user_policy::do_add_user", "Add a new user to the user_assignments file and schedules do_apply_policy for execution."
 recipe "rs_user_policy::do_remove_user", "Sets the user (specified by their email) to the \"delete\" status in user_assignments and schedules do_apply_policy for execution."

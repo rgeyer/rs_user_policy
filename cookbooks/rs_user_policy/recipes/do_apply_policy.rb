@@ -34,7 +34,7 @@ when 'gem'
 
   rs_user_policy_command = "rs_user_policy -r #{node["rs_user_policy"]["email"]} -s #{node["rs_user_policy"]["password"]}#{acct_id_options} -p #{policy_file} -u #{user_assignment_file} -d #{audit_dir} -e > #{logfile} 2>&1"
 when 'docker'
-  rs_user_policy_command = "docker run -v #{node['rs_user_policy']['home']}:/opt/rs_user_policy -e POLICY=/opt/rs_user_policy/rs_user_policy.json -e EMAIL=#{node['rs_user_policy']['email']} -e PASSWORD=#{node['rs_user_policy']['password']} -e ACCOUNT_IDS=#{node['rs_user_policy']['account_ids'].join(",")} -e USER_ASSIGNMENT=latest rgeyer/rs_user_policy:#{node['rs_user_policy']['docker']['container_version']}"
+  rs_user_policy_command = "docker run -rm -v #{node['rs_user_policy']['home']}:/opt/rs_user_policy -e POLICY=/opt/rs_user_policy/rs_user_policy.json -e EMAIL=#{node['rs_user_policy']['email']} -e PASSWORD=#{node['rs_user_policy']['password']} -e ACCOUNT_IDS=#{node['rs_user_policy']['account_ids'].join(",")} -e USER_ASSIGNMENT=latest rgeyer/rs_user_policy:#{node['rs_user_policy']['docker']['container_version']}"
 else
   raise "#{node['rs_user_policy']['runtime_environment']} is not a supported runtime environment.  Try either 'gem' or 'docker'."
 end

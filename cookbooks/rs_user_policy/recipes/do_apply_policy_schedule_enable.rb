@@ -2,7 +2,7 @@
 # Cookbook Name:: rs_user_policy
 # Recipe:: do_apply_policy_schedule_enable
 #
-# Copyright 2013, Ryan J. Geyer
+# Copyright 2013-2014, Ryan J. Geyer
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rightscale_marker :begin
+marker "recipe_start_rightscale" do
+  template "rightscale_audit_entry.erb"
+end
 
 cron "RightScale remote_recipe rs_user_policy::do_apply_policy" do
   minute node["rs_user_policy"]["apply_policy_schedule"]["minute"]
   user "root"
   command "rs_run_recipe --policy 'rs_user_policy::do_apply_policy' --name 'rs_user_policy::do_apply_policy' 2>&1 >> /var/log/rs_user_policy_cron.log"
 end
-
-rightscale_marker :end

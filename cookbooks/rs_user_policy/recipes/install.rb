@@ -16,7 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rightscale_marker :begin
+marker "recipe_start_rightscale" do
+  template "rightscale_audit_entry.erb"
+end
 
 case node['rs_user_policy']['runtime_environment']
 when 'gem'
@@ -26,5 +28,3 @@ when 'docker'
 else
   raise "#{node['rs_user_policy']['runtime_environment']} is not a supported runtime environment.  Try either 'gem' or 'docker'."
 end
-
-rightscale_marker :end

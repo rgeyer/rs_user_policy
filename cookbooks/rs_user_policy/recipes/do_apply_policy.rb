@@ -2,7 +2,7 @@
 # Cookbook Name:: rs_user_policy
 # Recipe:: do_apply_policy
 #
-# Copyright 2013, Ryan J. Geyer
+# Copyright 2013-2014, Ryan J. Geyer
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rightscale_marker :begin
+marker "recipe_start_rightscale" do
+  template "rightscale_audit_entry.erb"
+end
 
 policy_file = ::File.join(node['rs_user_policy']['home'], "rs_user_policy.json")
 
@@ -72,5 +74,3 @@ do
 done
   EOF
 end
-
-rightscale_marker :end

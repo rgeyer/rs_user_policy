@@ -16,7 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rightscale_marker :begin
+marker "recipe_start_rightscale" do
+  template "rightscale_audit_entry.erb"
+end
 
 ruby_block "Install rs_user_policy to the system direct from rubygems.org" do
   block do
@@ -49,5 +51,3 @@ ruby_block "Create the initial user_assignment file if (#{node["rs_user_policy"]
     end
   end
 end
-
-rightscale_marker :end

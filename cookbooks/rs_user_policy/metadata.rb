@@ -3,9 +3,9 @@ maintainer_email "me@ryangeyer.com"
 license          "All rights reserved"
 description      "Installs/Configures rs_user_policy"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          "0.2.2"
+version          "0.2.3"
 
-depends "rightscale"
+depends "marker"
 
 recipe "rs_user_policy::install", "Installs and initially configures rs_user_policy"
 recipe "rs_user_policy::install_docker", "Pulls the docker container for rs_user_policy"

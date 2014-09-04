@@ -16,10 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rightscale_marker :begin
+marker "recipe_start_rightscale" do
+  template "rightscale_audit_entry.erb"
+end
 
 execute "Pull rgeyer/rs_user_policy container" do
   command "docker pull rgeyer/rs_user_policy:#{node['rs_user_policy']['docker']['container_version']}"
 end
-
-rightscale_marker :end

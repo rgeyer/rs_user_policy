@@ -2,7 +2,7 @@
 # Cookbook Name:: rs_user_policy
 # Recipe:: do_add_user
 #
-# Copyright 2013, Ryan J. Geyer
+# Copyright 2013-2014, Ryan J. Geyer
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rightscale_marker :begin
+marker "recipe_start_rightscale" do
+  template "rightscale_audit_entry.erb"
+end
 
 user_assignment_file = ::File.join(node["rs_user_policy"]["user_assignments_dir"], `ls -t #{node["rs_user_policy"]["user_assignments_dir"]} | head -n1`.strip)
 
@@ -46,5 +48,3 @@ remote_recipe "Request do_appy_policy" do
   recipe "rs_user_policy::do_apply_policy"
   recipients_tags "server:uuid=#{node["rightscale"]["instance_uuid"]}"
 end
-
-rightscale_marker :end

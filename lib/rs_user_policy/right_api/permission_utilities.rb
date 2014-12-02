@@ -112,7 +112,7 @@ module RsUserPolicy
       def self.create_permissions(permissions, client)
         permissions.each do |user_href,perm_ary|
           user_perms_hash = Hash[perm_ary.keys.map{|p| [p, user_href]}]
-          RsUserPolicy::Utilities.yield_on_values_in_order(['observer'], user_perms_hash) do |role_title,user_href|
+          RsUserPolicy::Utilities.yield_on_keys_in_order(['observer'], user_perms_hash) do |role_title,user_href|
             created_permission = client.permissions.create(
               {
                 'permission[user_href]' => user_href,

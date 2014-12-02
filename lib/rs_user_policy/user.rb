@@ -21,7 +21,7 @@
 
 module RsUserPolicy
   class User
-    attr_reader :email, :href, :permissions
+    attr_reader :email, :href, :permissions, :user
 
     # Initializes read only attributes for an RsUserPolicy::User
     #

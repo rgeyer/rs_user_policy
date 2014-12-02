@@ -80,7 +80,6 @@ if user_assignments.length == 0
   else
     log.warn("No user_assignments file was specified or the file could not be found.  All users will be treated as immutable and written to the user_assigments output file.")
   end
-
 end
 
 user_collection = RsUserPolicy::UserCollection.new
@@ -102,16 +101,35 @@ multi_client.each do |account_id, account|
   log.info("#{child_account.name}:#{account_id} - #{child_account.href}; #{users.count} Users; #{permissions.count} Permissions")
 end
 
+user_assignments_without_delete = user_assignments.list.select do |assn|
+  roles = user_assignments.get_roles(assn)
+  !roles.include?("delete")
+end
+
+if opts[:authority]
+  log.warn("Because --authority is set, all users in the user_assignments file are being either created or updated.  Currently updating the properties of each user that already exists.")
+  users_to_update = user_collection.users.select{|u| user_assignments_without_delete.include? u.email}
+  users_to_update.each do |user|
+    only_update_these_properties = ["company","first_name","identity_provider_href","last_name","phone","principal_uid","timezone_name"]
+    properties = {:current_email => user.email}
+    properties.merge!(
+      user.to_hash.merge!(user_assignments[user.email]).select{|k,v| only_update_these_properties.include? k}
+    )
+    log.debug("Updating user #{user.email} with these properties \n#{JSON.pretty_generate(properties)}")
+    begin
+      user.user.update(:user => properties)
+    rescue RightApi::ApiError => e
+      log.error("Failed up update user #{user.email} with the following properties.\n #{JSON.pretty_generate(properties)}\n Error: #{e}")
+    end
+  end
+end
+
 # Populate the user_assignments with extra bits..
 user_collection.users.each do |user|
   user_hash = user.to_hash
   user_hash.delete("permissions")
-  user_assignments[user.email].merge!(user_hash)
-end
-
-user_assignments_without_delete = user_assignments.list.select do |assn|
-  roles = user_assignments.get_roles(assn)
-  !roles.include?("delete")
+  hash_to_merge = opts[:authority] ? user_hash.merge(user_assignments[user.email]) : user_hash
+  user_assignments[user.email].merge!(hash_to_merge)
 end
 
 net_new_users = user_assignments_without_delete - user_collection.users.map{|u| u.email }

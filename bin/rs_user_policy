@@ -112,9 +112,27 @@ if opts[:authority]
   users_to_update.each do |user|
     only_update_these_properties = ["company","first_name","identity_provider_href","last_name","phone","principal_uid","timezone_name"]
     properties = {:current_email => user.email}
-    properties.merge!(
-      user.to_hash.merge!(user_assignments[user.email]).select{|k,v| only_update_these_properties.include? k}
-    )
+    api_user_properties = user.to_hash.select{|k,v| only_update_these_properties.include? k}
+    if api_user_properties.kind_of?(Array)
+      hash_from_array = {}
+      api_user_properties.each do |pair|
+        hash_from_array[pair[0]] = pair[1]
+      end
+      api_user_properties = hash_from_array
+    end
+
+    user_assignments_properties = user_assignments[user.email].select{|k,v| only_update_these_properties.include? k}
+    if user_assignments_properties.kind_of?(Array)
+      hash_from_array = {}
+      user_assignments_properties.each do |pair|
+        hash_from_array[pair[0]] = pair[1]
+      end
+      user_assignments_properties = hash_from_array
+    end
+    log.debug("Merging user properties fetched from the API. \n#{JSON.pretty_generate(properties)} \n\n#{JSON.pretty_generate(api_user_properties)}")
+    properties.merge!(api_user_properties)
+    log.debug("Merging user properties defined in user_assignments. \n#{JSON.pretty_generate(properties)} \n\n#{JSON.pretty_generate(user_assignments_properties)}")
+    properties.merge!(user_assignment_properties)
     log.debug("Updating user #{user.email} with these properties \n#{JSON.pretty_generate(properties)}")
     begin
       user.user.update(:user => properties)

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rs_user_policy (0.1.11)
+    rs_user_policy (0.1.12)
       right_api_client (= 1.5.12)
       trollop (>= 1.16, < 3.0)
 

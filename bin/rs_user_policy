@@ -132,7 +132,7 @@ if opts[:authority]
     log.debug("Merging user properties fetched from the API. \n#{JSON.pretty_generate(properties)} \n\n#{JSON.pretty_generate(api_user_properties)}")
     properties.merge!(api_user_properties)
     log.debug("Merging user properties defined in user_assignments. \n#{JSON.pretty_generate(properties)} \n\n#{JSON.pretty_generate(user_assignments_properties)}")
-    properties.merge!(user_assignment_properties)
+    properties.merge!(user_assignments_properties)
     log.debug("Updating user #{user.email} with these properties \n#{JSON.pretty_generate(properties)}")
     begin
       user.user.update(:user => properties)

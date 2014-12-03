@@ -144,13 +144,13 @@ describe RsUserPolicy::RightApi::PermissionUtilities do
       created_permissions = RsUserPolicy::RightApi::PermissionUtilities.create_permissions(user_permissions, client)
       created_permissions.should == {
         '/api/users/123' => {
-          'actor' => '/api/permissions/1',
-          'publisher' => '/api/permissions/2',
-          'observer' => '/api/permissions/3'
+          'actor' => '/api/permissions/2',
+          'publisher' => '/api/permissions/3',
+          'observer' => '/api/permissions/1'
         },
         '/api/users/1234' => {
-          'publisher' => '/api/permissions/4',
-          'observer' => '/api/permissions/5',
+          'publisher' => '/api/permissions/5',
+          'observer' => '/api/permissions/4',
           'admin' => '/api/permissions/6'
         }
       }

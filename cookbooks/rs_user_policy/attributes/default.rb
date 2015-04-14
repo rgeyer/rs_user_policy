@@ -8,6 +8,6 @@ default["rs_user_policy"]["apply_policy_schedule"]["minute"] = "0"
 
 default["rs_user_policy"]["docker"]["container_version"] = "latest"
 
-node["rs_user_policy"]["user_assignments_dir"] = ::File.join(node["rs_user_policy"]["home"], "user_assignments")
-node["rs_user_policy"]["audits_dir"] = ::File.join(node["rs_user_policy"]["home"], "audits")
-node["rs_user_policy"]["log_dir"] = ::File.join(node["rs_user_policy"]["home"], "logs")
+node.set["rs_user_policy"]["user_assignments_dir"] = ::File.join(node["rs_user_policy"]["home"], "user_assignments")
+node.set["rs_user_policy"]["audits_dir"] = ::File.join(node["rs_user_policy"]["home"], "audits")
+node.set["rs_user_policy"]["log_dir"] = ::File.join(node["rs_user_policy"]["home"], "logs")

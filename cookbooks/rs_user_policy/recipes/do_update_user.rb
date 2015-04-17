@@ -35,7 +35,8 @@ ruby_block "Set user role in latest user_assignments file (#{user_assignment_fil
   end
 end
 
-remote_recipe "Request do_appy_policy" do
-  recipe "rs_user_policy::do_apply_policy"
-  recipients_tags "server:uuid=#{node["rightscale"]["instance_uuid"]}"
+bash "Request do_apply_policy" do
+  code <<-EOF
+  rs_run_recipe -n rs_user_policy::do_apply_policy
+  EOF
 end

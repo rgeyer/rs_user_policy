@@ -99,7 +99,7 @@ attribute "rs_user_policy/user/phone",
   :default => "9999999999",
   :recipes => ["rs_user_policy::do_add_user"]
 
-attribute "rs_user_policy/user/passowrd",
+attribute "rs_user_policy/user/password",
   :display_name => "RightScale User Policy New User Password",
   :description => "The password of a user who should be added to the user_assignments JSON file and created immediately.  If not specified a random secure password will be generated for the user.",
   :required => "optional",

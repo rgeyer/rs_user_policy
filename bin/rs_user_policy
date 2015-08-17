@@ -50,9 +50,15 @@ opts = Trollop::options do
   opt :audit_dir, "A directory where audit logs will be stored. By default this is the current working directory.", :type => :string
   opt :dry_run, "A flag indicating that no changes should be made, only the user_assignments.json should be evaluated (or created) and the audit_log.json produced"
   opt :authority, "A flag indicating that all users in the user_assignments file \"MUST\" exist, and will always be created.  Effectively asserting that the user_assignments is your canonical authority for users."
+  opt :debug, "A flag which will cause very verbose logging to help torubleshoot problems."
 end
 
 log = Logger.new(STDOUT)
+if opts[:debug]
+  log.level = Logger::DEBUG
+else
+  log.level = Logger::INFO
+end
 timestamp = Time::now.to_i
 
 if opts[:dry_run]
@@ -92,10 +98,25 @@ log.info("Invoked with account numbers (#{opts[:rs_acct_num].join(",")}).")
 # Iterate over all accounts once to discover users and their permissions
 multi_client.each do |account_id, account|
   child_client = account[:client]
-  child_account = child_client.accounts(:id => account_id).show()
+  begin
+    child_account = child_client.accounts(:id => account_id).show()
+  rescue RightApi::ApiError => e
+    log.error("Failed to get account details for account id #{account_id}.\n  Error: #{e}")
+    next
+  end
   account_href = child_account.href
-  users = child_client.users.index
-  permissions = child_client.permissions.index
+  begin
+    users = child_client.users.index
+  rescue RightApi::ApiError => e
+    log.error("Failed to list users for account #{child_account.name}:#{account_id} - #{child_account.href}.\n  Error: #{e}")
+    next
+  end
+  begin
+    permissions = child_client.permissions.index
+  rescue RightApi::ApiError => e
+    log.error("Failed to create a user with the following properties.\n  Properties: #{JSON.pretty_generate(user_create_params)}\n  Error: #{e}")
+    next
+  end
   user_collection.add_users(users)
   user_collection.add_permissions(account_href, permissions)
 
@@ -154,9 +175,15 @@ end
 begin
   multi_client.each do |account_id,account|
     child_client = account[:client]
-    child_account = child_client.accounts(:id => account_id).show()
+    begin
+      child_account = child_client.accounts(:id => account_id).show()
+    rescue RightApi::ApiError => e
+      log.error("Failed to get account details for account id #{account_id}.\n  Error: #{e}")
+      next
+    end
     account_name = child_account.name
     account_href = child_account.href
+    log.info("Making user permission changes in account #{account_name}:#{account_href}")
 
     user_collection.users.each do |user|
       email = user.email
@@ -169,15 +196,28 @@ begin
         # a user can also be effectively deleted if they have an empty list of
         # permissions for a particular account
         unless opts[:dry_run]
-          log.debug("Deleting #{user.email} from #{account_name} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
-          user.clear_permissions(account_href, child_client)
+          log.debug("  Deleting #{user.email} from #{account_name} by removing these permissions #{JSON.pretty_generate(existing_permissions)}")
+          begin
+            user.clear_permissions(account_href, child_client)
+          rescue RightApi::ApiError => e
+            log.error("  Failed to delete user #{user.email}:#{user.href} from #{account_name}.\n  Error: #{e}")
+            next
+          end
         end
         audit_log.add_entry(email, account_name, 'deleted', 'deleted')
       elsif !user_role.include?("immutable")
-        user_policy = policy.get_permissions(user_role, account_href)
-        removed,added = user.set_api_permissions(user_policy, account_href, child_client, :dry_run => opts[:dry_run])
-        changes = "-#{removed.values} +#{added.values}"
-        audit_log.add_entry(email, account_name, 'update_permissions', changes) unless removed.length + added.length == 0
+        begin
+          user_policy = policy.get_permissions(user_role, account_href)
+          role_titles = existing_permissions.map{|p| p.role_title }
+          log.debug("  Updating user #{user.email}:#{user.href}.\n    Existing Permissions: #{role_titles.sort}\n    Desired Permissions: #{user_policy.sort}")
+
+          removed,added = user.set_api_permissions(user_policy, account_href, child_client, :dry_run => opts[:dry_run])
+          changes = "-#{removed.values} +#{added.values}"
+          audit_log.add_entry(email, account_name, 'update_permissions', changes) unless removed.length + added.length == 0
+        rescue RightApi::ApiError => e
+          log.error("Failed to update permissions for user #{user.email}:#{user.href} in account #{account_name}:#{account_href}.\n  Error: #{e}")
+          next
+        end
       end
     end
   end

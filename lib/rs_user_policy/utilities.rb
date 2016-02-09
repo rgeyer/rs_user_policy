@@ -26,7 +26,7 @@ module RsUserPolicy
     # @param [String] href The relative href of the RightScale API resource
     # @return [String] The unique ID of the resource
     def self.id_from_href(href)
-      matches = /.*\/([0-9]*)/.match(href)
+      matches = /.*\/([a-zA-Z0-9\-]*)/.match(href)
       matches[1] || nil
     end
 

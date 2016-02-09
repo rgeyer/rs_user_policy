@@ -1,6 +1,6 @@
 Gem::Specification.new do |gem|
   gem.name = "rs_user_policy"
-  gem.version = "0.1.12"
+  gem.version = "0.1.13"
   gem.homepage = "https://github.com/rgeyer/rs_user_policy"
   gem.license = "MIT"
   gem.summary = %Q{Manages users across many different child accounts of a RightScale Enterprise Master Account}

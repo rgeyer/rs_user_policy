@@ -29,7 +29,7 @@ describe "RS User Policy Bin" do
   context :valid_policy_json do
     it "Exits with exception when policy file does not exist" do
       output = `#{rs_user_policy_binfile} --rs-email="foo" --rs-pass="bar" --rs-acct-num="baz" --policy="foobarbaz.txt"`
-      output.should include "Unable to initialize policy from filename foobarbaz.txt.  Error: No such file or directory - foobarbaz.txt"
+      output.should include "Unable to initialize policy from filename foobarbaz.txt.  Error: No such file or directory"
       $?.exitstatus.should == 1
     end
 

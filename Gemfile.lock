@@ -25,6 +25,7 @@ GEM
     mime-types (2.99)
     minitest (5.8.4)
     netrc (0.11.0)
+    power_assert (0.2.7)
     rake (10.5.0)
     rest-client (1.8.0)
       http-cookie (>= 1.0.2, < 2.0)
@@ -46,6 +47,8 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.4.0)
     rspec-support (3.4.1)
+    test-unit (3.1.7)
+      power_assert
     thread_safe (0.3.5)
     trollop (2.1.2)
     tzinfo (1.2.2)
@@ -65,6 +68,7 @@ DEPENDENCIES
   rake
   rs_user_policy!
   rspec (~> 3.1)
+  test-unit
   yard (~> 0.8)
 
 BUNDLED WITH
